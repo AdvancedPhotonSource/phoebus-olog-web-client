@@ -91,6 +91,10 @@ class EntryEditor extends Component{
                 selectedProperties: []});
             this.titleRef.current.value = "";
         }
+        else {
+            //Create default template for log entry description
+            this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
+        }
     }
 
     getAvailableProperties = () => {
@@ -435,8 +439,8 @@ class EntryEditor extends Component{
                         <Form.Row className="grid-item">
                             <Form.Control
                                 as="textarea" 
-                                rows="5" 
-                                placeholder="Description"
+                                rows="9"
+                                placeholder="Comments"
                                 ref={this.descriptionRef}/>
                         </Form.Row>
                         <Form.Row>
