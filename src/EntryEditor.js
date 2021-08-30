@@ -61,6 +61,7 @@ class EntryEditor extends Component{
     descriptionRef = React.createRef();
    
     componentDidMount = () => { 
+
         // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
         // Copy relevant fields to the state of this class, taking into account that a Reply
         // may or may not exist in the template.
@@ -76,8 +77,10 @@ class EntryEditor extends Component{
                 selectedProperties: p
             });
             this.titleRef.current.value = this.props.currentLogEntry.title;
+        } else {
+            //If user is not replying to a log entry, create default template for log entry description
+            this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
         }
-
         this.getAvailableProperties();
     }
 
@@ -90,10 +93,6 @@ class EntryEditor extends Component{
                 level: customization.defaultLevel, 
                 selectedProperties: []});
             this.titleRef.current.value = "";
-        }
-        else {
-            //Create default template for log entry description
-            this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
         }
     }
 
