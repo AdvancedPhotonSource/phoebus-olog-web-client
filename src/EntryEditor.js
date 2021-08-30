@@ -59,6 +59,9 @@ class EntryEditor extends Component{
     descriptionRef = React.createRef();
 
     componentDidMount = () => {
+        //Create default template for log entry description
+        this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
+
         // If currentLogRecord is defined, use it as a "template", i.e. user is replying to a log entry.
         // Copy relevant fields to the state of this class, taking into account that a Log Entry Group
         // may or may not exist in the template.
@@ -79,10 +82,6 @@ class EntryEditor extends Component{
                 properties: p
             });
             this.titleRef.current.value = this.props.currentLogRecord.title;
-        }
-        else {
-            //Create default template for log entry description
-            this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
         }
     }
     
