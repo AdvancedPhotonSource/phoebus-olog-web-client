@@ -30,7 +30,8 @@ import LogoutDialog from './LogoutDialog';
 import checkSession from './session-check';
 // Need axios for back-end access as the "fetch" API does not support CORS cookies.
 import axios from 'axios';
-
+import {name, version} from '../package.json';
+import Row from 'react-bootstrap/Row';
 
 /**
  * Banner component with controls to create log entry, log book or tag. Plus
@@ -63,7 +64,8 @@ class Banner extends Component {
   } 
 
 
-  isSessionValid = () => {
+  handleNewLogEntry = () => {
+    
     var promise = checkSession();
     if(!promise){
       this.props.setShowLogin(true);
@@ -72,6 +74,9 @@ class Banner extends Component {
       promise.then(data => {
         if(!data){
           this.props.setShowLogin(true);
+        }
+        else{
+          this.props.setReplyAction(false);
         }
       });
     }
@@ -106,11 +111,14 @@ class Banner extends Component {
     return (
       <>
         <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href="/">Olog ES</Navbar.Brand>
+          <Navbar.Brand href="/">
+            <Row style={{marginLeft: "1px", marginRight: "1px"}}>{name}</Row>
+            <Row style={{marginLeft: "1px", marginRight: "1px"}}><span style={{fontSize: "10px  "}}>v{version}</span></Row>
+          </Navbar.Brand>
           <Link to="/edit">
             <Button disabled={!this.props.userData.userName} 
               variant="primary" 
-              onClick={() => this.isSessionValid()}>New Log Entry</Button>
+              onClick={() => this.handleNewLogEntry()}>New Log Entry</Button>
           </Link>
           {/*<Dropdown>
             <Dropdown.Toggle disabled={!this.props.userData.userName}/>
