@@ -474,6 +474,10 @@ class EntryEditor extends Component{
                                     onClick={() => this.setState({showHtmlPreview: true})}>
                                 HTML Preview
                             </Button>
+                            <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
+                                    onClick={() => window.open("https://commonmark.org/help/", "_blank")}>
+                                Commonmark Help
+                            </Button>
                         </Form.Row>
                         </Form>
                         {this.state.attachedFiles.length > 0 ? <Form.Row className="grid-item">{attachments}</Form.Row> : null}
