@@ -378,10 +378,8 @@ class EntryEditor extends Component{
             )
         })
 
-        let levels = customization.levelValues.split(",");
-
         const doUpload = this.props.fileName !== '';
-        
+
         var propertyItems = this.state.selectedProperties.filter(property => property.name !== "Log Entry Group").map((property, index) => {
             return (
                 <PropertyEditor key={index}
@@ -397,7 +395,6 @@ class EntryEditor extends Component{
                     <Form noValidate validated={this.state.validated} onSubmit={this.submit}>
                         <Form.Row>
                             <Form.Label className="new-entry">New Log Entry</Form.Label>
-                            <Button type="submit" disabled={this.props.userData.userName === ""}>Create</Button>
                         </Form.Row>
                         <Form.Row className="grid-item">
                             <Dropdown as={ButtonGroup}>
@@ -423,13 +420,14 @@ class EntryEditor extends Component{
                             </Dropdown>
                             &nbsp;{currentTagSelection}
                         </Form.Row>
+                        { customization.level &&
                         <Form.Row className="grid-item">
                             <Dropdown as={ButtonGroup}>
                                 <Dropdown.Toggle className="selection-dropdown" size="sm" variant="secondary">
                                     {customization.level}                                
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                {levels.map((level, index) => (
+                                {customization.levelValues.split(",").map((level, index) => (
                                     <Dropdown.Item eventKey={index}
                                     style={{fontSize: "12px", paddingBottom: "1px"}}
                                     key={index}
@@ -441,6 +439,7 @@ class EntryEditor extends Component{
                             {(this.state.level === "" || !this.state.level) && 
                                 <Form.Label className="form-error-label" column={true}>Select an entry type.</Form.Label>}
                         </Form.Row>
+                        }
                         <Form.Row className="grid-item">
                             <Form.Control 
                                 required
@@ -474,18 +473,20 @@ class EntryEditor extends Component{
                             </Button>
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
                                     onClick={() => this.setState({showHtmlPreview: true})}>
-                                HTML Preview
+                                Preview
                             </Button>
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
                                     onClick={() => window.open("https://commonmark.org/help/", "_blank")}>
-                                Commonmark Help
+                                Commonmarkup Help
                             </Button>
+                            <Button style={{ marginLeft: "auto" }} variant="primary" onClick={() => window.location.href= "/"}>Cancel</Button>
+                            <Button style={{ marginLeft: "5px" }} type="submit" disabled={this.props.userData.userName === ""}>Save</Button>
                         </Form.Row>
                         </Form>
                         {this.state.attachedFiles.length > 0 ? <Form.Row className="grid-item">{attachments}</Form.Row> : null}
                         {<Form.Row className="grid-item">
                             <Form.Group style={{width: "400px"}}>
-                                <Button variant="secondary" size="sm" onClick={() => this.setState({showAddProperty: true})}>
+                                <Button variant="secondary" size="sm" disabled="true" onClick={() => this.setState({showAddProperty: true})}>
                                     <span><FaPlus className="add-button"/></span>Add Property
                                 </Button>
                                 {propertyItems}              
