@@ -51,7 +51,9 @@
                     <tr><td>Created</td><td><b><OlogMoment date={this.props.currentLogRecord.createdDate}/></b></td></tr>
                     <tr><td>Logbooks</td><td><b>{logbooks}</b></td></tr>
                     <tr><td>Tags</td><td><b>{tags}</b></td></tr>
-                    <tr><td>{customization.level}</td><td><b>{this.props.currentLogRecord.level}</b></td></tr>
+                    { customization.level &&
+                        <tr><td>{customization.level}</td><td><b>{this.props.currentLogRecord.level}</b></td></tr>
+                    }
                     </tbody>
             </Table>
             </div>
