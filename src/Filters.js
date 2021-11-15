@@ -39,7 +39,7 @@ class Filters extends Component{
         openTimespan: false,
         openFromTo: false,
         openOther: false,
-        timeSpan: 1, // default time span item, e.g. "12 hours"
+        timeSpan: 2, // default time span item id, e.g. 2 for "30 days"
         searchCriteria: {
             logbooks: [],
             tags: [],
@@ -47,7 +47,7 @@ class Filters extends Component{
             text: "",
             level: "",
             owner: "",
-            startDate: "12 hours",
+            startDate: "30 days",
             endDate: "now"
           },
         startDate: new Date(), // Used by calendar component
@@ -103,17 +103,17 @@ class Filters extends Component{
         var span = parseInt(event.target.id);
         switch(span){
             case 1:
-                start = "12 hours"; 
+                start = "7 days"; 
                 break;
             case 2:
-                start = "1 day"; 
+                start = "30 days"; 
                 break;
             case 3:
             default:
-                start = "3 days";
+                start = "90 days";
                 break;
             case 4:
-                start = "7 days";
+                start = "180 days";
                 break;
         }
     
@@ -197,7 +197,7 @@ class Filters extends Component{
 
     render(){
 
-        let timeSpans = ["12 hours", "1 day", "3 days", "7 days"];
+        let timeSpans = ["7 days", "30 days", "90 days", "180 days"];
 
         return(
             <Container className="grid-item filters full-height" style={{paddingLeft: "5px", paddingRight: "5px"}}>
