@@ -50,7 +50,6 @@ class MainApp extends Component {
     cookies = new Cookies();
 
     componentDidMount = () =>{
-      
     }
 
     search = (sortOrder, from, size, callback) => {
