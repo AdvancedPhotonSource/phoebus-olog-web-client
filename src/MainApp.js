@@ -39,6 +39,10 @@ class MainApp extends Component {
       logGroupRecords: [],
     };
 
+  componentDidMount = () => {
+    this.props.setReplyAction(false);
+  }
+
   search = () => {
 
     this.setState({searchInProgress: true}, () => {

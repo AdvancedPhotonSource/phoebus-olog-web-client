@@ -62,7 +62,7 @@ class Banner extends Component {
   } 
 
 
-  handleNewLogEntry = () => {
+  handleNewLogEntry = (reply) => {
     
     var promise = checkSession();
     if(!promise){
@@ -74,7 +74,9 @@ class Banner extends Component {
           this.props.setShowLogin(true);
         }
         else{
-          this.props.setReplyAction(false);
+            if (!reply) {
+                this.props.setReplyAction(false);
+            }
         }
       });
     }
@@ -105,11 +107,20 @@ class Banner extends Component {
             <Row style={{marginLeft: "1px", marginRight: "1px"}}>{name}</Row>
             <Row style={{marginLeft: "1px", marginRight: "1px"}}><span style={{fontSize: "10px  "}}>v{version}</span></Row>
           </Navbar.Brand>
+          { !this.props.replyAction &&
           <Link to="/edit">
             <Button disabled={!this.props.userData.userName} 
               variant="primary" 
-              onClick={() => this.handleNewLogEntry()}>New Log Entry</Button>
+              onClick={() => this.handleNewLogEntry(false)}>New Log Entry</Button>
           </Link>
+          }
+          { this.props.replyAction &&
+          <Link to="/edit">
+            <Button disabled={!this.props.userData.userName} 
+              variant="primary" 
+              onClick={() => this.handleNewLogEntry(true)}>Reply</Button>
+          </Link>
+          }
           {/*<Dropdown>
             <Dropdown.Toggle disabled={!this.props.userData.userName}/>
             <DropdownMenu alignRight="true">
