@@ -35,7 +35,7 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
+import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, sortLogsDateCreated } from './utils';
 import HtmlPreview from './HtmlPreview';
 
 class EntryEditor extends Component{
@@ -71,6 +71,22 @@ class EntryEditor extends Component{
             if(!getLogEntryGroupId(this.props.currentLogEntry.properties)){
                 let property = newLogEntryGroup();
                 p.push(property);
+                let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(this.props.currentLogEntry.createdDate);
+                let details = "\n\n### " + this.props.currentLogEntry.owner + "    " + createdDate + "\n\n";
+                this.descriptionRef.current.value = "Reply here.\n\n===============================================================" + details + this.props.currentLogEntry.source;
+            } else {
+                fetch(`${process.env.REACT_APP_BASE_URL}/logs?properties=Log Entry Group.id.` + getLogEntryGroupId(this.props.currentLogEntry.properties))
+                .then(response => response.json())
+                .then(data => {
+                    let logThread = "";
+                    let sortedResult = sortLogsDateCreated(data, true);
+                    for (var i = 0; i < sortedResult.length; i++) {
+                        let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(sortedResult[i].createdDate);
+                        let details = "\n\n### " + sortedResult[i].owner + "    " + createdDate + "\n\n";
+                        logThread = logThread +"\n\n===========================================================" + details + sortedResult[i].source;
+                    this.descriptionRef.current.value = "Reply here." + logThread;
+                    }
+                });
             }
             this.setState({
                 selectedLogbooks: this.props.currentLogEntry.logbooks,
@@ -479,7 +495,7 @@ class EntryEditor extends Component{
                                     onClick={() => window.open("https://commonmark.org/help/", "_blank")}>
                                 Commonmarkup Help
                             </Button>
-                            <Button style={{ marginLeft: "auto" }} variant="primary" onClick={() => window.location.href= "/"}>Cancel</Button>
+                            <Button style={{ marginLeft: "auto" }} variant="primary" onClick={() => {const { history } = this.props; history.push('/');}}>Cancel</Button>
                             <Button style={{ marginLeft: "5px" }} type="submit" disabled={this.props.userData.userName === ""}>Save</Button>
                         </Form.Row>
                         </Form>
