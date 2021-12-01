@@ -35,7 +35,7 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import {removeImageMarkup, ologClientInfoHeader } from './utils';
+import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
 import HtmlPreview from './HtmlPreview';
 import LoadingOverlay from 'react-loading-overlay';
 
@@ -463,7 +463,7 @@ class EntryEditor extends Component{
                                     onClick={() => window.open("https://commonmark.org/help/", "_blank")}>
                                 Commonmarkup Help
                             </Button>
-                            <Button style={{ marginLeft: "auto" }} variant="primary" onClick={() => window.location.href= "/"}>Cancel</Button>
+                            <Button style={{ marginLeft: "auto" }} variant="primary" onClick={() => {const { history } = this.props; history.push('/');}}>Cancel</Button>
                             <Button style={{ marginLeft: "5px" }} type="submit" disabled={this.props.userData.userName === ""}>Save</Button>
                         </Form.Row>
                         </Form>
