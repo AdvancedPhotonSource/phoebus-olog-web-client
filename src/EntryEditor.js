@@ -37,6 +37,7 @@ import Selection from './Selection';
 import checkSession from './session-check';
 import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, sortLogsDateCreated } from './utils';
 import HtmlPreview from './HtmlPreview';
+import LoadingOverlay from 'react-loading-overlay';
 
 class EntryEditor extends Component{
 
@@ -51,7 +52,8 @@ class EntryEditor extends Component{
         showEmbedImageDialog: false,
         logEntryGroupProperty: null,
         availableProperties: [],
-        showHtmlPreview: false
+        showHtmlPreview: false,
+        createInProgress: false
     }
 
     fileInputRef = React.createRef();
@@ -226,7 +228,10 @@ class EntryEditor extends Component{
         };
         const { history } = this.props;
         axios.post(`${process.env.REACT_APP_BASE_URL}/logs/` + this.props.currentLogEntry.id + `?markup=commonmark`, logEntry, { withCredentials: true })
-        .then(res => history.push('/'))
+        .then(res => {
+            this.setState({createInProgress: false});
+            history.push('/');
+        })
         .catch(error => {
             if(error.response && (error.response.status === 401 || error.response.status === 403)){
                 alert('You are currently not authorized to create a log entry.')
@@ -234,6 +239,7 @@ class EntryEditor extends Component{
             else if(error.response && (error.response.status >= 500)){
                 alert('Failed to create log entry.')
             }
+            this.setState({createInProgress: false});
         });
     }
 
@@ -249,19 +255,21 @@ class EntryEditor extends Component{
         var promise = checkSession();
         if(!promise){
             this.props.setUserData({});
+            this.setState({createInProgress: false});
             return;
         }
         else{
             promise.then(data => {
                 if(!data){
                     this.props.setUserData({});
+                    this.setState({createInProgress: false});
                     return;
                 }
                 else{
                     const selectionsAreValid = this.state.selectedLogbooks.length > 0 && this.state.level !== null;
                     this.setState({validated: true});
-
                     if (checkValidity && selectionsAreValid){
+                        this.setState({createInProgress: true});
                         const { history } = this.props;
                         const logEntry = {
                             logbooks: this.state.selectedLogbooks,
@@ -282,6 +290,7 @@ class EntryEditor extends Component{
                                     this.updateCurrentLogEntry();
                                 }
                                 else{
+                                    this.setState({createInProgress: false});
                                     history.push('/');
                                 }
                             })
@@ -292,6 +301,7 @@ class EntryEditor extends Component{
                                 else if(error.response && (error.response.status >= 500)){
                                     alert('Failed to create log entry.')
                                 }
+                                this.setState({createInProgress: false});
                             });
                         
                     }
@@ -407,6 +417,17 @@ class EntryEditor extends Component{
 
         return(
             <>
+               
+                <LoadingOverlay
+                            active={this.state.createInProgress}
+                            spinner
+                            styles={{
+                                overlay: (base) => ({
+                                ...base,
+                                background: 'rgba(97, 97, 97, 0.3)',
+                                '& svg circle': {stroke: 'rgba(19, 68, 83, 0.9) !important'}
+                                })
+                            }}>
                 <Container fluid className="full-height">
                     <Form noValidate validated={this.state.validated} onSubmit={this.submit}>
                         <Form.Row>
@@ -487,7 +508,7 @@ class EntryEditor extends Component{
                                     onClick={() => this.setState({showEmbedImageDialog: true})}>
                                 Embed Image
                             </Button>
-                            <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
+                            {/*<Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
                                     onClick={() => this.setState({showHtmlPreview: true})}>
                                 Preview
                             </Button>
@@ -507,8 +528,10 @@ class EntryEditor extends Component{
                                 </Button>
                                 {propertyItems}              
                             </Form.Group>
-                                </Form.Row>}
-                </Container>
+                        </Form.Row>}
+                        </Container>
+                    </LoadingOverlay>
+                
                 {
                 <Modal show={this.state.showAddProperty} onHide={() => this.setState({showAddProperty: false})}>
                     <Modal.Header closeButton>

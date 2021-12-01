@@ -20,7 +20,7 @@ import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
-import SearchResultGroup from './SearchResultGroup';
+import SearchResultItem from './SearchResultItem';
 import LoadingOverlay from 'react-loading-overlay';
 import { FaArrowUp, FaArrowDown} from "react-icons/fa";
 import Popover from 'react-bootstrap/Popover';
@@ -45,6 +45,11 @@ class SearchResultList extends Component{
         this.props.search();
     }
 
+    submit = (event) => {
+        event.preventDefault();
+        this.search(this.props.sortAscending);
+    }
+
     setSearchString = (event) => {
         this.props.setSearchString(event.target.value, false);
     }
@@ -66,17 +71,18 @@ class SearchResultList extends Component{
 
     render(){
 
-        var tree = this.props.logEntryTree.map((element, index) => {
-            return <SearchResultGroup 
-                            key={index}
-                            logEntries={element}
-                            setCurrentLogEntry={this.props.setCurrentLogEntry}
-                            selectedLogEntryId={this.props.selectedLogEntryId}/>
+        var list = this.props.searchResult.map((item, index) => {
+            return <SearchResultItem
+                        key={index}
+                        log={item}
+                        childItem={false}
+                        setCurrentLogEntry={this.props.setCurrentLogEntry}
+                        selectedLogEntryId={this.props.selectedLogEntryId}/>
         });
 
         return(
             <Container className="grid-item full-height" style={{paddingLeft: "5px", paddingRight: "5px"}}>
-                <Form style={{paddingTop: "5px"}}>
+                <Form style={{paddingTop: "5px"}} onSubmit={(e) => this.submit(e)}>
                     <Form.Row>
                         <Col style={{flexGrow: "0", paddingTop: "7px"}}>
                             <OverlayTrigger trigger="click"
@@ -139,8 +145,8 @@ class SearchResultList extends Component{
                         })
                       }}>
                 <div style={{overflowY: 'scroll', height: 'calc(100vh)'}}>
-                    {this.props.logEntryTree.length > 0 ? 
-                        tree :
+                    {this.props.searchResult.length > 0 ?
+                        list :
                         "No search results"}
                 </div>
                 </LoadingOverlay>

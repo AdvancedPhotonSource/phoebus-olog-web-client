@@ -30,12 +30,12 @@ class LogEntryGroupView extends Component{
         this.search();
     }
 
-    state = {
-        logRecords: []
-    }
-      
     getContent = (source) => {
         return {__html: this.props.remarkable.render(source)};
+    }
+
+    showLog = (log) => {
+        this.props.setCurrentLogEntry(log);
     }
 
     search = () => {
@@ -43,17 +43,17 @@ class LogEntryGroupView extends Component{
           .then(response => response.json())
           .then(data => {
             let sortedResult = sortLogsDateCreated(data, false);
-            this.setState({logRecords: sortedResult});
+            this.props.setLogGroupRecords(sortedResult);
           });
     }
 
     render(){
 
-        var logGroupItems = this.state.logRecords.map((row, index) => {
+        var logGroupItems = this.props.logGroupRecords.map((row, index) => {
             return(
-                <div key={index} className={`${this.props.currentLogEntry.id === row.id ? "selected-log-entry" : ""}`}>
-                    <GroupHeader logEntry={row}/>
-                    <div style={{paddingTop: "5px", wordWrap: "break-word", borderBottom: "1px solid #e0e0e0"}} 
+                <div key={index}>
+                    <GroupHeader logEntry={row} showLog={this.showLog}/>
+                    <div style={{paddingTop: "5px", wordWrap: "break-word"}}
                                     dangerouslySetInnerHTML={this.getContent(row.source)}/>
                 </div>
             );

@@ -1,6 +1,6 @@
 {
   "name": "Olog",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.0",
@@ -10,7 +10,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "babel-jest": "^24.9.0",
     "bootstrap": "^4.5.0",
     "i18next": "^19.8.4",
