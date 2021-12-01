@@ -35,7 +35,7 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
+import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, sortLogsDateCreated } from './utils';
 import HtmlPreview from './HtmlPreview';
 import LoadingOverlay from 'react-loading-overlay';
 
@@ -61,6 +61,7 @@ class EntryEditor extends Component{
     descriptionRef = React.createRef();
    
     componentDidMount = () => { 
+
         // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
         // Copy relevant fields to the state of this class, taking into account that a Log Entry Group
         // may or may not exist in the template.
@@ -72,6 +73,22 @@ class EntryEditor extends Component{
             if(!getLogEntryGroupId(this.props.currentLogEntry.properties)){
                 let property = newLogEntryGroup();
                 p.push(property);
+                let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(this.props.currentLogEntry.createdDate);
+                let details = "\n\n### " + this.props.currentLogEntry.owner + "    " + createdDate + "\n\n";
+                this.descriptionRef.current.value = "Reply here.\n\n===============================================================" + details + this.props.currentLogEntry.source;
+            } else {
+                fetch(`${process.env.REACT_APP_BASE_URL}/logs?properties=Log Entry Group.id.` + getLogEntryGroupId(this.props.currentLogEntry.properties))
+                .then(response => response.json())
+                .then(data => {
+                    let logThread = "";
+                    let sortedResult = sortLogsDateCreated(data, true);
+                    for (var i = 0; i < sortedResult.length; i++) {
+                        let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(sortedResult[i].createdDate);
+                        let details = "\n\n### " + sortedResult[i].owner + "    " + createdDate + "\n\n";
+                        logThread = logThread +"\n\n===========================================================" + details + sortedResult[i].source;
+                    this.descriptionRef.current.value = "Reply here." + logThread;
+                    }
+                });
             }
             this.setState({
                 selectedLogbooks: this.props.currentLogEntry.logbooks,
@@ -80,8 +97,10 @@ class EntryEditor extends Component{
                 selectedProperties: p
             });
             this.titleRef.current.value = this.props.currentLogEntry.title;
+        } else {
+            //If user is not replying to a log entry, create default template for log entry description
+            this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
         }
-
         this.getAvailableProperties();
     }
 
@@ -385,10 +404,8 @@ class EntryEditor extends Component{
             )
         })
 
-        let levels = customization.levelValues.split(",");
-
         const doUpload = this.props.fileName !== '';
-        
+
         var propertyItems = this.state.selectedProperties.filter(property => property.name !== "Log Entry Group").map((property, index) => {
             return (
                 <PropertyEditor key={index}
@@ -415,7 +432,6 @@ class EntryEditor extends Component{
                     <Form noValidate validated={this.state.validated} onSubmit={this.submit}>
                         <Form.Row>
                             <Form.Label className="new-entry">New Log Entry</Form.Label>
-                            <Button type="submit" disabled={this.props.userData.userName === "" || this.state.createInProgress}>Create</Button>
                         </Form.Row>
                         <Form.Row className="grid-item">
                             <Dropdown as={ButtonGroup}>
@@ -441,13 +457,14 @@ class EntryEditor extends Component{
                             </Dropdown>
                             &nbsp;{currentTagSelection}
                         </Form.Row>
+                        { customization.level &&
                         <Form.Row className="grid-item">
                             <Dropdown as={ButtonGroup}>
                                 <Dropdown.Toggle className="selection-dropdown" size="sm" variant="secondary">
                                     {customization.level}                                
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
-                                {levels.map((level, index) => (
+                                {customization.levelValues.split(",").map((level, index) => (
                                     <Dropdown.Item eventKey={index}
                                     style={{fontSize: "12px", paddingBottom: "1px"}}
                                     key={index}
@@ -459,6 +476,7 @@ class EntryEditor extends Component{
                             {(this.state.level === "" || !this.state.level) && 
                                 <Form.Label className="form-error-label" column={true}>Select an entry type.</Form.Label>}
                         </Form.Row>
+                        }
                         <Form.Row className="grid-item">
                             <Form.Control 
                                 required
@@ -472,8 +490,8 @@ class EntryEditor extends Component{
                         <Form.Row className="grid-item">
                             <Form.Control
                                 as="textarea" 
-                                rows="5" 
-                                placeholder="Description"
+                                rows="9"
+                                placeholder="Comments"
                                 ref={this.descriptionRef}/>
                         </Form.Row>
                         <Form.Row>
@@ -492,14 +510,20 @@ class EntryEditor extends Component{
                             </Button>
                             {/*<Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
                                     onClick={() => this.setState({showHtmlPreview: true})}>
-                                HTML Preview
-                                </Button>*/}
+                                Preview
+                            </Button>
+                            <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
+                                    onClick={() => window.open("https://commonmark.org/help/", "_blank")}>
+                                Commonmarkup Help
+                            </Button>
+                            <Button style={{ marginLeft: "auto" }} variant="primary" onClick={() => {const { history } = this.props; history.push('/');}}>Cancel</Button>
+                            <Button style={{ marginLeft: "5px" }} type="submit" disabled={this.props.userData.userName === ""}>Save</Button>
                         </Form.Row>
                         </Form>
                         {this.state.attachedFiles.length > 0 ? <Form.Row className="grid-item">{attachments}</Form.Row> : null}
                         {<Form.Row className="grid-item">
                             <Form.Group style={{width: "400px"}}>
-                                <Button variant="secondary" size="sm" onClick={() => this.setState({showAddProperty: true})}>
+                                <Button variant="secondary" size="sm" disabled="true" onClick={() => this.setState({showAddProperty: true})}>
                                     <span><FaPlus className="add-button"/></span>Add Property
                                 </Button>
                                 {propertyItems}              

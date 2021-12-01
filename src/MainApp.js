@@ -31,7 +31,7 @@ class MainApp extends Component {
 
   state = {
       logEntryTree: [],
-      searchString: "start=12 hours&end=now",
+      searchString: "start=30 days&end=now",
       selectedLogEntryId: 0,
       searchResult: [],
       searchInProgress: false,
@@ -40,7 +40,7 @@ class MainApp extends Component {
     };
 
   componentDidMount = () => {
-    this.props.setReplyAction(false);
+      this.props.setReplyAction(false);
   }
 
   search = () => {

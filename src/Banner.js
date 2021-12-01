@@ -63,7 +63,6 @@ class Banner extends Component {
 
 
   handleNewLogEntry = (reply) => {
-    
     var promise = checkSession();
     if(!promise){
       this.props.setShowLogin(true);
