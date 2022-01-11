@@ -26,6 +26,7 @@ import {getSearchString} from './utils';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
 import DateTimePicker from 'react-datetime-picker';
+import customization from './customization';
 
 /**
  * Component holding search criteria elements, i.e.
@@ -306,7 +307,8 @@ class Filters extends Component{
                                             onChange={this.textChanged}></Form.Control>
                                     </td>
                                 </tr>
-                                <tr>
+                                { customization.level &&
+                                  <tr>
                                     <td>Level:</td>
                                     <td>
                                         <Form.Control size="sm" 
@@ -314,7 +316,8 @@ class Filters extends Component{
                                             value={this.state.searchCriteria.level}
                                             onChange={this.levelChanged}></Form.Control>
                                     </td>
-                                </tr>
+                                  </tr>
+                                }
                                 <tr>
                                     <td>Author:</td>
                                     <td>
