@@ -37,6 +37,7 @@ import Selection from './Selection';
 import checkSession from './session-check';
 import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
 import HtmlPreview from './HtmlPreview';
+import LogHistory from './LogHistory';
 import LoadingOverlay from 'react-loading-overlay';
 
 class EntryEditor extends Component{
@@ -53,7 +54,8 @@ class EntryEditor extends Component{
         logEntryGroupProperty: null,
         availableProperties: [],
         showHtmlPreview: false,
-        createInProgress: false
+        createInProgress: false,
+        logHistoryCommonmark: ""
     }
 
     fileInputRef = React.createRef();
@@ -279,6 +281,10 @@ class EntryEditor extends Component{
         return this.descriptionRef.current.value;
     }
 
+    getCommonmarkHistory = () => {
+        return this.state.logHistoryCommonmark;
+    }
+
     getAttachedFiles = () => {
         return this.state.attachedFiles;
     }
@@ -476,9 +482,13 @@ class EntryEditor extends Component{
                                 {propertyItems}              
                             </Form.Group>
                         </Form.Row>}
+                        { this.getCommonmarkHistory() &&
+                            <Form.Row className="grid-item">
+                                <LogHistory getCommonmarkHistory={this.getCommonmarkHistory}/>
+                            </Form.Row>
+                        }
                         </Container>
                     </LoadingOverlay>
-                
                 {
                 <Modal show={this.state.showAddProperty} onHide={() => this.setState({showAddProperty: false})}>
                     <Modal.Header closeButton>
@@ -492,6 +502,7 @@ class EntryEditor extends Component{
                     </Modal.Body>
                 </Modal>
                 }
+
                 <EmbedImageDialog showEmbedImageDialog={this.state.showEmbedImageDialog} 
                     setShowEmbedImageDialog={this.setShowEmbeddImageDialog}
                     addEmbeddedImage={this.addEmbeddedImage}/>
