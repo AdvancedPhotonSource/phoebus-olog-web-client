@@ -37,6 +37,7 @@ import Selection from './Selection';
 import checkSession from './session-check';
 import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, sortLogsDateCreated } from './utils';
 import HtmlPreview from './HtmlPreview';
+import LogHistory from './LogHistory';
 import LoadingOverlay from 'react-loading-overlay';
 
 class EntryEditor extends Component{
@@ -53,7 +54,8 @@ class EntryEditor extends Component{
         logEntryGroupProperty: null,
         availableProperties: [],
         showHtmlPreview: false,
-        createInProgress: false
+        createInProgress: false,
+        logHistoryCommonmark: ""
     }
 
     fileInputRef = React.createRef();
@@ -74,8 +76,8 @@ class EntryEditor extends Component{
                 let property = newLogEntryGroup();
                 p.push(property);
                 let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(this.props.currentLogEntry.createdDate);
-                let details = "\n\n### " + this.props.currentLogEntry.owner + "    " + createdDate + "\n\n";
-                this.descriptionRef.current.value = "Reply here.\n\n===============================================================" + details + this.props.currentLogEntry.source;
+                let details = "### " + this.props.currentLogEntry.owner + "    " + createdDate + "\n\n";
+                this.setState( { logHistoryCommonmark: details + this.props.currentLogEntry.source + "\n"});
             } else {
                 fetch(`${process.env.REACT_APP_BASE_URL}/logs?properties=Log Entry Group.id.` + getLogEntryGroupId(this.props.currentLogEntry.properties))
                 .then(response => response.json())
@@ -84,10 +86,14 @@ class EntryEditor extends Component{
                     let sortedResult = sortLogsDateCreated(data, true);
                     for (var i = 0; i < sortedResult.length; i++) {
                         let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(sortedResult[i].createdDate);
-                        let details = "\n\n### " + sortedResult[i].owner + "    " + createdDate + "\n\n";
-                        logThread = logThread +"\n\n===========================================================" + details + sortedResult[i].source;
-                    this.descriptionRef.current.value = "Reply here." + logThread;
+                        let details = "### " + sortedResult[i].owner + "    " + createdDate + "\n\n";
+                        if (logThread) {
+                            logThread = logThread +"===========================================================\n\n" + details + sortedResult[i].source + "\n\n";
+                        } else {
+                            logThread = logThread + details + sortedResult[i].source + "\n\n";
+                        }
                     }
+                    this.setState( { logHistoryCommonmark: logThread });
                 });
             }
             this.setState({
@@ -332,6 +338,10 @@ class EntryEditor extends Component{
         return this.descriptionRef.current.value;
     }
 
+    getCommonmarkHistory = () => {
+        return this.state.logHistoryCommonmark;
+    }
+
     getAttachedFiles = () => {
         return this.state.attachedFiles;
     }
@@ -529,9 +539,13 @@ class EntryEditor extends Component{
                                 {propertyItems}              
                             </Form.Group>
                         </Form.Row>}
+                        { this.getCommonmarkHistory() &&
+                            <Form.Row className="grid-item">
+                                <LogHistory getCommonmarkHistory={this.getCommonmarkHistory}/>
+                            </Form.Row>
+                        }
                         </Container>
                     </LoadingOverlay>
-                
                 {
                 <Modal show={this.state.showAddProperty} onHide={() => this.setState({showAddProperty: false})}>
                     <Modal.Header closeButton>
@@ -545,6 +559,7 @@ class EntryEditor extends Component{
                     </Modal.Body>
                 </Modal>
                 }
+
                 <EmbedImageDialog showEmbedImageDialog={this.state.showEmbedImageDialog} 
                     setShowEmbedImageDialog={this.setShowEmbeddImageDialog}
                     addEmbeddedImage={this.addEmbeddedImage}/>
