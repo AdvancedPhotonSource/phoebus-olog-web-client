@@ -54,8 +54,7 @@ class EntryEditor extends Component{
         logEntryGroupProperty: null,
         availableProperties: [],
         showHtmlPreview: false,
-        createInProgress: false,
-        logHistoryCommonmark: ""
+        createInProgress: false
     }
 
     fileInputRef = React.createRef();
@@ -281,8 +280,11 @@ class EntryEditor extends Component{
         return this.descriptionRef.current.value;
     }
 
-    getCommonmarkHistory = () => {
-        return this.state.logHistoryCommonmark;
+    showGroup = () => {
+        if (getLogEntryGroupId(this.props.currentLogEntry.properties)) {
+            return true
+        }
+        return false;
     }
 
     getAttachedFiles = () => {
@@ -482,10 +484,8 @@ class EntryEditor extends Component{
                                 {propertyItems}              
                             </Form.Group>
                         </Form.Row>}
-                        { this.getCommonmarkHistory() &&
-                            <Form.Row className="grid-item">
-                                <LogHistory getCommonmarkHistory={this.getCommonmarkHistory}/>
-                            </Form.Row>
+                        { this.props.currentLogEntry &&
+                                <LogHistory currentLogEntry={this.props.currentLogEntry} showGroup={this.showGroup}/>
                         }
                         </Container>
                     </LoadingOverlay>
