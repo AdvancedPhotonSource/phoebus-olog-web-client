@@ -35,7 +35,7 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, sortLogsDateCreated } from './utils';
+import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
 import HtmlPreview from './HtmlPreview';
 import LogHistory from './LogHistory';
 import LoadingOverlay from 'react-loading-overlay';
@@ -54,8 +54,7 @@ class EntryEditor extends Component{
         logEntryGroupProperty: null,
         availableProperties: [],
         showHtmlPreview: false,
-        createInProgress: false,
-        logHistoryCommonmark: ""
+        createInProgress: false
     }
 
     fileInputRef = React.createRef();
@@ -75,26 +74,6 @@ class EntryEditor extends Component{
             if(!getLogEntryGroupId(this.props.currentLogEntry.properties)){
                 let property = newLogEntryGroup();
                 p.push(property);
-                let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(this.props.currentLogEntry.createdDate);
-                let details = "### " + this.props.currentLogEntry.owner + "    " + createdDate + "\n\n";
-                this.setState( { logHistoryCommonmark: details + this.props.currentLogEntry.source + "\n"});
-            } else {
-                fetch(`${process.env.REACT_APP_BASE_URL}/logs?properties=Log Entry Group.id.` + getLogEntryGroupId(this.props.currentLogEntry.properties))
-                .then(response => response.json())
-                .then(data => {
-                    let logThread = "";
-                    let sortedResult = sortLogsDateCreated(data, true);
-                    for (var i = 0; i < sortedResult.length; i++) {
-                        let createdDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(sortedResult[i].createdDate);
-                        let details = "### " + sortedResult[i].owner + "    " + createdDate + "\n\n";
-                        if (logThread) {
-                            logThread = logThread +"===========================================================\n\n" + details + sortedResult[i].source + "\n\n";
-                        } else {
-                            logThread = logThread + details + sortedResult[i].source + "\n\n";
-                        }
-                    }
-                    this.setState( { logHistoryCommonmark: logThread });
-                });
             }
             this.setState({
                 selectedLogbooks: this.props.currentLogEntry.logbooks,
@@ -338,8 +317,11 @@ class EntryEditor extends Component{
         return this.descriptionRef.current.value;
     }
 
-    getCommonmarkHistory = () => {
-        return this.state.logHistoryCommonmark;
+    showGroup = () => {
+        if (getLogEntryGroupId(this.props.currentLogEntry.properties)) {
+            return true
+        }
+        return false;
     }
 
     getAttachedFiles = () => {
@@ -539,10 +521,8 @@ class EntryEditor extends Component{
                                 {propertyItems}              
                             </Form.Group>
                         </Form.Row>}
-                        { this.getCommonmarkHistory() &&
-                            <Form.Row className="grid-item">
-                                <LogHistory getCommonmarkHistory={this.getCommonmarkHistory}/>
-                            </Form.Row>
+                        { this.props.currentLogEntry &&
+                                <LogHistory currentLogEntry={this.props.currentLogEntry} showGroup={this.showGroup}/>
                         }
                         </Container>
                     </LoadingOverlay>

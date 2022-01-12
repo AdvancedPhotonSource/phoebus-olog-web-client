@@ -21,8 +21,14 @@ import { Remarkable } from 'remarkable';
 import './css/olog.css';
 import imageProcessor from './image-processor';
 import customization from './customization';
+import OlogMoment from './OlogMoment';
+import { getLogEntryGroupId, sortLogsDateCreated } from './utils';
 
 class LogHistory extends Component{
+
+    state = {
+        logHistory: []
+    }
 
     remarkable = new Remarkable('full', {
         html:         false,        // Enable HTML tags in source
@@ -35,16 +41,55 @@ class LogHistory extends Component{
       });
 
     getContent = (source) => {
-        console.log(source);
         this.remarkable.use(imageProcessor, {urlPrefix: customization.urlPrefix});
         return {__html: this.remarkable.render(source)};
     }
 
+    search = () => {
+        fetch(`${process.env.REACT_APP_BASE_URL}/logs?properties=Log Entry Group.id.` + getLogEntryGroupId(this.props.currentLogEntry.properties))
+        .then(response => response.json())
+        .then(data => {
+            let logs = sortLogsDateCreated(data, false);
+            this.setState({ logHistory: logs});
+        });
+    }
+
     render(){
-        return(
-                    <div style={{paddingTop: "5px", wordWrap: "break-word"}} className="olog-table"
-                        dangerouslySetInnerHTML={this.getContent(this.props.getCommonmarkHistory())}>
+        var logGroupItems = null;
+        if (this.props.showGroup()) {
+            this.search();
+            logGroupItems = this.state.logHistory.map((row, index) => {
+              return(
+                <div key={index}>
+                    <div className="separator" >
+                        <OlogMoment date={row.createdDate}/>, {row.owner}, {row.title}
                     </div>
+
+                    <div style={{paddingTop: "5px", wordWrap: "break-word"}}
+                                    dangerouslySetInnerHTML={this.getContent(row.source)}/>
+                </div>
+              );
+            });
+        } else {
+            logGroupItems =
+                <div>
+                    <div className="separator" >
+                        <OlogMoment date={this.props.currentLogEntry.createdDate}/>, {this.props.currentLogEntry.owner}, {this.props.currentLogEntry.title}
+                    </div>
+
+                    <div style={{paddingTop: "5px", wordWrap: "break-word"}}
+                                    dangerouslySetInnerHTML={this.getContent(this.props.currentLogEntry.source)}/>
+                </div> ;
+        }
+
+        return(
+            <>
+                <h1>History</h1>
+                <div class="grid-item">
+                    {logGroupItems}
+                </div>
+            </>
+
         )
     }
 }
