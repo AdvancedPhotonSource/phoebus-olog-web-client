@@ -23,8 +23,6 @@ import imageProcessor from './image-processor';
 import './css/olog.css';
 import customization from './customization';
 import {getLogEntryGroupId} from './utils';
-import ToggleButton from 'react-bootstrap/ToggleButton';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import LogEntryGroupView from './LogEntryGroupView';
 import LogEntrySingleView from './LogEntrySingleView';
@@ -95,14 +93,23 @@ class LogDetails extends Component{
                         )}}>Copy URL</Button>
                     </span>
                     {getLogEntryGroupId(this.props.currentLogEntry.properties) &&
-                        <ButtonGroup toggle style={{marginTop: "10px"}}>
-                            <ToggleButton 
-                                size="sm"
-                                type="checkbox"
-                                checked={this.props.showGroup}
-                                onChange={(e) => this.toggleShowMerged(e.currentTarget.checked)}>Show/hide group
-                            </ToggleButton>
-                        </ButtonGroup>
+                        <>
+                        { !this.props.showGroup &&
+                            <Button size="sm"
+                                style={{marginTop: "10px"}}
+                                onClick={(e) => this.toggleShowMerged(true)}>
+                            Show Group
+                            </Button>
+                        }
+                        { this.props.showGroup &&
+                            <Button size="sm"
+                                show={!this.props.showGroup}
+                                style={{marginTop: "10px"}}
+                                onClick={(e) => this.toggleShowMerged(false)}>
+                            Hide Group
+                            </Button>
+                        }
+                        </>
                     }
                     {!this.props.showGroup &&
                         <LogEntrySingleView currentLogEntry={this.props.currentLogEntry} remarkable={this.remarkable}/>

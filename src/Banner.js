@@ -60,8 +60,7 @@ class Banner extends Component {
   } 
 
 
-  handleNewLogEntry = () => {
-    
+  handleNewLogEntry = (reply) => {
     var promise = checkSession();
     if(!promise){
       this.props.setShowLogin(true);
@@ -72,7 +71,9 @@ class Banner extends Component {
           this.props.setShowLogin(true);
         }
         else{
-          this.props.setReplyAction(false);
+            if (!reply) {
+                this.props.setReplyAction(false);
+            }
         }
       });
     }
@@ -103,11 +104,20 @@ class Banner extends Component {
             <Row style={{marginLeft: "1px", marginRight: "1px"}}>{packageInfo.name}</Row>
             <Row style={{marginLeft: "1px", marginRight: "1px"}}><span style={{fontSize: "10px  "}}>v{packageInfo.version}</span></Row>
           </Navbar.Brand>
+          { !this.props.replyAction &&
           <Link to="/edit">
             <Button disabled={!this.props.userData.userName} 
               variant="primary" 
-              onClick={() => this.handleNewLogEntry()}>New Log Entry</Button>
+              onClick={() => this.handleNewLogEntry(false)}>New Log Entry</Button>
           </Link>
+          }
+          { this.props.replyAction &&
+          <Link to="/edit">
+            <Button disabled={!this.props.userData.userName} 
+              variant="primary" 
+              onClick={() => this.handleNewLogEntry(true)}>Reply</Button>
+          </Link>
+          }
           <Nav className="justify-content-end" style={{ width: "100%" }}>
             <Button onClick={this.handleClick}>{this.props.userData.userName ? this.props.userData.userName : 'Sign In'}</Button>
           </Nav> 

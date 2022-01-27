@@ -90,6 +90,7 @@ class Filters extends Component{
         }
         this.setState({searchCriteria: copy}, 
             () =>  {
+
                  let searchParams = {};
                  let tagsString = this.state.searchCriteria.tags.join(",");
                  if(tagsString !== ''){
