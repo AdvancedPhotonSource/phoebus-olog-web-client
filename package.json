@@ -14,8 +14,9 @@
     "react-loading-overlay": "^1.0.1",
     "react-moment": "^0.9.7",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^5.0.0",
-    "remarkable": "^2.0.1"
+    "react-scripts": "^3.0.1",
+    "remarkable": "^2.0.1",
+    "universal-cookie": "^4.0.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -39,7 +40,6 @@
     ]
   },
   "devDependencies": {
-    "jest": "^27.4.7",
     "jest-cli": "^26.6.3"
   },
   "jest": {
