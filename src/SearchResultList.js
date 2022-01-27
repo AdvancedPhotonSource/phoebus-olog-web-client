@@ -19,14 +19,19 @@ import React, {Component} from 'react';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import SearchResultItem from './SearchResultItem';
 import LoadingOverlay from 'react-loading-overlay';
 import { FaArrowUp, FaArrowDown} from "react-icons/fa";
 import Popover from 'react-bootstrap/Popover';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
-import {addSortOrder} from './utils';
+import {searchParamsToQueryString, queryStringToSearchParameters} from './utils';
 import Tooltip from 'react-bootstrap/Tooltip';
+import Cookies from 'universal-cookie';
+import Pagination from 'react-bootstrap/Pagination';
+import customization from './customization';
+
 
 /**
  * Pane showing search query input and a the list of log entries 
@@ -34,24 +39,71 @@ import Tooltip from 'react-bootstrap/Tooltip';
  */
 class SearchResultList extends Component{
 
+    state = {
+        expandSymbol: ">",
+        pageItems: [],
+        currentPageIndex: 1,
+        pageSize: customization.defaultPageSize,
+        pageCount: 1,
+        sortOrder: "down" // Need to maintain sort order here as pagination buttons trigger search.
+    }
+
+    cookies = new Cookies();
+
     componentDidMount = () => {
-        this.props.search();
+        this.search();
     }
 
-    search = (ascending) => {
-        this.props.setSortAscending(ascending);
-        let queryWithSortOrder = addSortOrder(this.props.searchString, ascending);
-        this.props.setSearchString(queryWithSortOrder);
-        this.props.search();
+    search = () => {
+        this.props.search(this.state.sortOrder, (this.state.currentPageIndex - 1) * this.state.pageSize, this.state.pageSize, this.updatePaginationControls);
     }
 
-    submit = (event) => {
+    updatePaginationControls = () => {
+        // Calculate page count
+        let newPageCount = Math.ceil(this.props.searchResult.hitCount / this.state.pageSize);
+        
+        this.setState({pageCount: newPageCount, pageItems: []}, () => {
+            let items = [];
+            // Calculate first index to render. This depends on the current page index as well as the
+            // total page count (which might be greater than the maximum number of buttons: 10).
+            let pagesToRender =  Math.min(9, this.state.pageCount - 1);
+            let firstIndex = Math.max(1, this.state.currentPageIndex - pagesToRender);
+            let lastIndex = firstIndex + pagesToRender;
+            for(let i = firstIndex; i <= lastIndex; i++){
+                items.push(<Pagination.Item 
+                    key={i} 
+                    active={i === this.state.currentPageIndex}
+                    onClick={() => this.goToPage(i)}>
+                    {i}
+                </Pagination.Item>)
+            }
+    
+            this.setState({pageItems: [...this.state.pageItems, ...items]});
+        });
+    }
+
+    goToPage = (pageNumber) => {
+        this.setState({currentPageIndex: pageNumber}, () => {
+            this.search();
+        });
+    }
+
+    downButtonClicked = () => {
+        this.setState({currentPageIndex: 1, sortOrder: "down"}, () => this.search())
+    }
+
+    upButtonClicked = () => {
+        this.setState({currentPageIndex: 1, sortOrder: "up"}, () => this.search())
+    }
+
+    submit = (event) => {
         event.preventDefault();
-        this.search(this.props.sortAscending);
+        this.search(this.state.sortOrder);
     }
 
     setSearchString = (event) => {
-        this.props.setSearchString(event.target.value, false);
+        let searchParams = queryStringToSearchParameters(event.target.value);
+        this.props.setSearchParams(searchParams);
     }
 
     popover = (
@@ -69,9 +121,36 @@ class SearchResultList extends Component{
         </Popover>
       );
 
+    toggleFilters = () => {
+        this.props.toggleFilters();
+        let symbol = this.props.showFilters ? ">" : "<";
+        this.setState({expandSymbol: symbol});
+    }
+
+    /**
+     * Handles input in hits per page field and rejets any
+     * value < 1 and > 999, i.e. leading zeros are also rejected.
+     */
+    setPageSize = (e) => {
+        const re = /^[0-9\b]{1,3}$/;
+        if (e.target.value === '' || re.test(e.target.value)) {
+            let pageCount = parseInt(e.target.value);
+            if(pageCount === 0){
+                return;
+            }
+            this.setState({pageSize: e.target.value})
+        }   
+    }
+
+    handleKeyDown = (e) => {
+        if(e.key === 'Enter'){
+            this.setState({currentPageIndex: 1}, () => this.search());
+        }
+    }
+
     render(){
 
-        var list = this.props.searchResult.map((item, index) => {
+        var list = this.props.searchResult.logs.map((item, index) => {
             return <SearchResultItem
                         key={index}
                         log={item}
@@ -84,6 +163,9 @@ class SearchResultList extends Component{
             <Container className="grid-item full-height" style={{paddingLeft: "5px", paddingRight: "5px"}}>
                 <Form style={{paddingTop: "5px"}} onSubmit={(e) => this.submit(e)}>
                     <Form.Row>
+                        <Col style={{flexGrow: "0"}}>
+                            <Button size="sm" onClick={() => this.toggleFilters()}>{this.state.expandSymbol}</Button>
+                        </Col>
                         <Col style={{flexGrow: "0", paddingTop: "7px"}}>
                             <OverlayTrigger trigger="click"
                                 overlay={this.popover}
@@ -94,11 +176,12 @@ class SearchResultList extends Component{
                         </Col>
                         <Col style={{paddingLeft: "0px"}}>
                             <Form.Control size="sm" 
-                                type="input" 
+                                type="input"
+                                disabled={this.props.showFilters}
                                 placeholder="No search string"
-                                value={this.props.searchString}
                                 style={{fontSize: "12px"}}
-                                onChange={this.setSearchString}> 
+                                defaultValue={searchParamsToQueryString(this.props.searchParams)}
+                                onChange={(e) => this.setSearchString(e)}>
                             </Form.Control>
                         </Col>
                         <Col style={{flexGrow: "0",paddingTop: "7px"}}>
@@ -113,7 +196,7 @@ class SearchResultList extends Component{
                                 placement="bottom">
                                     <Button 
                                         size="sm"
-                                        onClick={(e) => this.search(false)}>
+                                        onClick={(e) => this.downButtonClicked()}>
                                         <FaArrowDown/>
                                     </Button>
                             </OverlayTrigger>
@@ -127,7 +210,7 @@ class SearchResultList extends Component{
                                     placement="bottom">
                                     <Button 
                                         size="sm"
-                                        onClick={(e) => this.search(true)}>
+                                        onClick={(e) => this.upButtonClicked()}>
                                         <FaArrowUp/>
                                     </Button>
                             </OverlayTrigger>
@@ -144,11 +227,50 @@ class SearchResultList extends Component{
                           '& svg circle': {stroke: 'rgba(19, 68, 83, 0.9) !important'}
                         })
                       }}>
-                <div style={{overflowY: 'scroll', height: 'calc(100vh)'}}>
-                    {this.props.searchResult.length > 0 ?
-                        list :
-                        "No search results"}
-                </div>
+                    <div style={{overflowY: 'scroll', height: 'calc(80vh)'}} >
+                        {this.props.searchResult.logs.length > 0 ?
+                            list :
+                            "No search results"}
+                    </div>
+                    <div className="pagination-container">
+                        <Container>
+                           <Row>
+                               <Col style={{padding: '0px', maxWidth: '90px'}}>
+                                <Form.Label >Hits per page: </Form.Label> 
+                               </Col>
+                                <Col style={{padding: '0px', maxWidth: '50px'}}>
+                                <Form.Control size="sm" 
+                                    type="input"
+                                    value={this.state.pageSize}
+                                    onChange={(e) => this.setPageSize(e)}
+                                    onKeyDown={(e) => this.handleKeyDown(e)}/>
+                               </Col>
+                            </Row>
+                            <Row style={{visibility: this.state.pageCount < 2 ? 'hidden' : 'visible'}}>
+                               <Col style={{marginTop: '13px', padding: '0px'}}>
+                                <Pagination
+                                    size='sm'> 
+                                    <Pagination.First disabled={this.state.currentPageIndex === 1}
+                                        onClick={() => this.goToPage(1)}
+                                        style={{fontWeight: 'bold'}}>&#124;&lt;</Pagination.First>
+                                    <Pagination.Prev  onClick={() => this.goToPage(this.state.currentPageIndex - 1)}
+                                        disabled={this.state.currentPageIndex === 1}
+                                        style={{fontWeight: 'bold'}} >&lt;</Pagination.Prev>
+                                    {this.state.pageItems}
+                                    <Pagination.Next onClick={() => this.goToPage(this.state.currentPageIndex + 1)} 
+                                        disabled={this.state.currentPageIndex === this.state.pageCount}
+                                        style={{fontWeight: 'bold'}}>&gt;</Pagination.Next>
+                                    <Pagination.Last disabled={this.state.currentPageIndex === this.state.pageCount}
+                                        onClick={() => this.goToPage(this.state.pageCount)}
+                                        style={{fontWeight: 'bold'}}>&gt;&#124;</Pagination.Last>
+                                    </Pagination>
+                                </Col>
+                                <Col style={{marginTop: '16px',  padding:'5px', maxWidth: '60px'}}>
+                                    {this.state.currentPageIndex} / {this.state.pageCount}
+                                </Col>
+                           </Row>
+                       </Container>
+                    </div>
                 </LoadingOverlay>
             </Container>
         )

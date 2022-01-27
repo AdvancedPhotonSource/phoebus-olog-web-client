@@ -95,6 +95,7 @@ class App extends Component{
         return(
             <>
                 <Router>
+                    
                     <Banner {...this.state}
                             refreshLogbooks={this.refreshLogbooks}
                             refreshTags={this.refreshTags}
@@ -118,9 +119,11 @@ class App extends Component{
                         </Route>
                         <Route path="/logs/:id" render={(props) => <LogDetailsDetached {...props} 
                             setCurrentLogEntry={this.setCurrentLogEntry}
-                            setShowGroup={this.setShowGroup}/>}>
+                            setShowGroup={this.setShowGroup}
+                            currentLogEntry={this.state.currentLogEntry}/>}>
                         </Route>
                     </Switch>
+                   
                 </Router>
             </>
         );

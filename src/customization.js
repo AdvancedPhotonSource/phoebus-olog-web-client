@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-export default {
+let customization = {
     /**
      * The name of the "level" (legacy name) meta data field.
      */
@@ -37,5 +37,17 @@ export default {
     /**
      * Specifies whether to support grouping of log entries.
      */
-    log_entry_groups_support: true
+    log_entry_groups_support: true,
+
+    /**
+     * Default search params
+     */
+    defaultSearchParams: {start: "12 hours", end: "now"},
+
+    /**
+     * Default page size in search
+     */
+    defaultPageSize: 30
 }
+
+export default customization;
