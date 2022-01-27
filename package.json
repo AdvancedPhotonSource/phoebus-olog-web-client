@@ -40,7 +40,6 @@
     ]
   },
   "devDependencies": {
-    "jest": "^27.4.7",
     "jest-cli": "^26.6.3"
   },
   "jest": {
