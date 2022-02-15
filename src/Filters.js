@@ -160,6 +160,8 @@ class Filters extends Component{
                                     onChange={(e) => this.inputChanged(e, 'text')}/>
                             </td>
                         </tr>
+                        {customization.level &&  
+                        <>
                         <tr>
                             <td colSpan="2">{customization.level}:</td>
                         </tr>
@@ -171,6 +173,8 @@ class Filters extends Component{
                                     onChange={(e) => this.inputChanged(e, 'level')}/>
                             </td>
                         </tr>
+                        </>
+                        }
                         <tr>
                             <td colSpan="2"><Accordion>
                                 <Accordion.Toggle eventKey="0" onClick={() => this.setState({openLogbooks: !this.state.openLogbooks})}

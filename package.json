@@ -2,6 +2,7 @@
   "name": "Olog",
   "version": "1.0.4",
   "private": true,
+  "homepage": "https://ctlolog.asp.anl.gov",
   "dependencies": {
     "axios": "^0.21.2",
     "babel-jest": "^24.9.0",

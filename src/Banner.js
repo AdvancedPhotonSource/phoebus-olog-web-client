@@ -30,6 +30,7 @@ import checkSession from './session-check';
 import axios from 'axios';
 import packageInfo from '../package.json';
 import Row from 'react-bootstrap/Row';
+import customization from './customization';
 
 /**
  * Banner component with controls to create log entry, log book or tag. Plus
@@ -46,7 +47,7 @@ class Banner extends Component {
 
     // Try to get user data from back-end.
     // If server returns user data with non-null userName, there is a valid session.
-    axios.get(`${process.env.REACT_APP_BASE_URL}/user`, { withCredentials: true })
+   axios.get(`${customization.urlRoot}/${process.env.REACT_APP_BASE_URL}/user`, { withCredentials: true, baseURL: customization.urlRoot })
         .then(res => {
             // As long as there is a session cookie, the response SHOULD contain
             // user data. Check for status just in case...
@@ -57,11 +58,13 @@ class Banner extends Component {
               this.props.setUserData({userName: "", roles: []});
             }
         }).catch(err => {/** TODO: handle connection error */});
+
   } 
 
 
   handleNewLogEntry = (reply) => {
     var promise = checkSession();
+    this.props.setReplyAction(reply);
     if(!promise){
       this.props.setShowLogin(true);
     }
@@ -69,11 +72,6 @@ class Banner extends Component {
       promise.then(data => {
         if(!data){
           this.props.setShowLogin(true);
-        }
-        else{
-            if (!reply) {
-                this.props.setReplyAction(false);
-            }
         }
       });
     }
@@ -104,15 +102,15 @@ class Banner extends Component {
             <Row style={{marginLeft: "1px", marginRight: "1px"}}>{packageInfo.name}</Row>
             <Row style={{marginLeft: "1px", marginRight: "1px"}}><span style={{fontSize: "10px  "}}>v{packageInfo.version}</span></Row>
           </Navbar.Brand>
-          { !this.props.replyAction &&
-          <Link to="/edit">
+          { !this.props.getReplyAction() &&
+          <Link to="/edit/0">
             <Button disabled={!this.props.userData.userName} 
               variant="primary" 
               onClick={() => this.handleNewLogEntry(false)}>New Log Entry</Button>
           </Link>
           }
-          { this.props.replyAction &&
-          <Link to="/edit">
+          { this.props.getReplyAction() &&
+          <Link to={window.location.pathname}>
             <Button disabled={!this.props.userData.userName} 
               variant="primary" 
               onClick={() => this.handleNewLogEntry(true)}>Reply</Button>

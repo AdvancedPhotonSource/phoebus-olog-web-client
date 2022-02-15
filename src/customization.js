@@ -20,7 +20,7 @@ let customization = {
     /**
      * The name of the "level" (legacy name) meta data field.
      */
-    level: "Entry Type",
+    level: "",
     /**
      * Values for the "level" drop-down.
      */
@@ -34,6 +34,7 @@ let customization = {
      * Base URL pointing to the Olog service. Required in order to support imbedded into the description (body) of a log entry.
      */
     urlPrefix: `${process.env.REACT_APP_BASE_URL}/`,
+    urlRoot: "https://ctlolog.aps.anl.gov",
     /**
      * Specifies whether to support grouping of log entries.
      */
@@ -42,7 +43,7 @@ let customization = {
     /**
      * Default search params
      */
-    defaultSearchParams: {start: "12 hours", end: "now"},
+    defaultSearchParams: {start: "30 days", end: "now"},
 
     /**
      * Default page size in search

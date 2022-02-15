@@ -53,6 +53,7 @@ class LogDetails extends Component{
 
     componentDidMount = () => {
         this.remarkable.use(imageProcessor, {urlPrefix: customization.urlPrefix});
+        document.body.onmousedown = e => { if (e.button === 1) return false; };
     }
 
     getContent = (source) => {
@@ -75,8 +76,9 @@ class LogDetails extends Component{
                     <NavigationButtons selectedLogEntryId={this.props.currentLogEntry.id}
                         setCurrentLogEntry={this.props.setCurrentLogEntry}/>}
                     {/* Site may choose to not support log entry groups */}
-                    {customization.log_entry_groups_support && 
-                        <Link to="/edit">
+                    {customization.log_entry_groups_support &&
+                        <Link to={`/edit/${this.props.currentLogEntry.id}`}>
+ 
                             <Button size="sm" 
                                     disabled={!this.props.userData || !this.props.userData.userName}
                                     style={{marginTop: "10px", marginRight: "5px"}} 

@@ -40,8 +40,10 @@ class App extends Component{
         replyAction: false,
         showLogin: false,
         showLogout: false,
+        logGroupRecords: [],
         showGroup: false
     }
+
 
     componentDidMount() {
         // Logbooks and tags are public to read
@@ -79,6 +81,14 @@ class App extends Component{
         this.setState({replyAction: reply});
     }
 
+    getCurrentLogEntry = () => {
+        return this.state.currentLogEntry;
+    }
+
+    getReplyAction = () => {
+        return this.state.replyAction;
+    }
+
     setShowLogin = (show) => {
         this.setState({showLogin: show});
     } 
@@ -89,6 +99,10 @@ class App extends Component{
 
     setShowGroup = (val) => {
         this.setState({showGroup: val});
+    }
+
+    setLogGroupRecords = (recs) => {
+        this.setState({logGroupRecords: recs});
     }
 
     render(){
@@ -102,24 +116,33 @@ class App extends Component{
                             setShowLogin={this.setShowLogin}
                             setShowLogout={this.setShowLogout}
                             setUserData={this.setUserData}
+                            getCurrentLogEntry={this.getCurrentLogEntry}
+                            getReplyAction={this.getReplyAction}
                             setReplyAction={this.setReplyAction}/>
                     <Switch>
                         <Route exact path="/">
                             <MainApp {...this.state}
                                 setCurrentLogEntry={this.setCurrentLogEntry}
+                                setLogGroupRecords={this.setLogGroupRecords}
                                 setReplyAction={this.setReplyAction}
                                 setShowGroup={this.setShowGroup}
                                 />
                         </Route>
-                        <Route path="/edit">
-                            <EntryEditor {...this.state}
+                        <Route path="/edit/:id" render={(props) =>
+                            <EntryEditor {...this.state} {...props}
+                                setCurrentLogEntry={this.setCurrentLogEntry}
+                                setReplyAction={this.setReplyAction}
+                                getCurrentLogEntry={this.setCurrentLogEntry}
+                                getReplyAction={this.getReplyAction}
                                 setShowLogin={this.setShowLogin}
                                 setUserData={this.setUserData}
-                                />
+                                />} >
                         </Route>
-                        <Route path="/logs/:id" render={(props) => <LogDetailsDetached {...props} 
+                        <Route path="/logs/:id" render={(props) => <LogDetailsDetached  {...this.state} {...props} 
                             setCurrentLogEntry={this.setCurrentLogEntry}
                             setShowGroup={this.setShowGroup}
+                            setLogGroupRecords={this.setLogGroupRecords}
+                            setReplyAction={this.setReplyAction}
                             currentLogEntry={this.state.currentLogEntry}/>}>
                         </Route>
                     </Switch>

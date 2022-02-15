@@ -32,6 +32,7 @@ class LogDetailsDetached extends Component{
 
     componentDidMount = () => {
         this.loadLogEntry(this.props.match.params.id);
+        this.props.setReplyAction(false);
     }
 
     loadLogEntry = (id) => {
@@ -63,7 +64,7 @@ class LogDetailsDetached extends Component{
         return(
             <>
             {!this.state.showError && 
-                <LogDetails currentLogEntry={this.props.currentLogEntry}
+                <LogDetails {...this.props} currentLogEntry={this.props.currentLogEntry}
                     setCurrentLogEntry={this.props.setCurrentLogEntry}
                     setShowGroup={this.props.setShowGroup}/>}
             {this.state.showError &&
