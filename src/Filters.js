@@ -25,11 +25,8 @@ import {setSearchParam, removeSearchParam, dateToString} from './utils';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
 import DateTimePicker from 'react-datetime-picker';
-<<<<<<< HEAD
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
-=======
->>>>>>> 015594d (Remove Level field from filters, if level is not defined in customization.js.)
 import customization from './customization';
 
 /**
@@ -136,7 +133,6 @@ class Filters extends Component{
 
     render(){
         return(
-<<<<<<< HEAD
             <>
             <Container className="grid-item filters full-height" style={{padding: "8px"}}>
                 <Table size="sm" className="search-fields-table">

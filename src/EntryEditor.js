@@ -35,7 +35,7 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
+import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, ologClientInfoHeader } from './utils';
 import HtmlPreview from './HtmlPreview';
 import LogHistory from './LogHistory';
 import LoadingOverlay from 'react-loading-overlay';
