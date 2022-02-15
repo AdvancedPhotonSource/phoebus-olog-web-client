@@ -5,7 +5,6 @@
   "homepage": "https://ctlolog.asp.anl.gov",
   "dependencies": {
     "axios": "^0.21.2",
-    "babel-jest": "^24.9.0",
     "moment": "^2.27.0",
     "react": "^16.13.1",
     "react-bootstrap": "^1.4.3",
@@ -42,10 +41,5 @@
   },
   "devDependencies": {
     "jest-cli": "^26.6.3"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.jsx?$": "babel-jest"
-    }
   }
 }
