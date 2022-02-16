@@ -306,7 +306,7 @@ class EntryEditor extends Component{
                         let url = this.props.replyAction ? 
                             `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark&inReplyTo=` + this.state.currentLogEntry.id :
                             `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark`;
-                        axios.put(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader() })
+                        axios.put(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader(), baseURL: customization.urlRoot })
                             .then(res => {
                                 if(this.state.attachedFiles.length > 0){ // No need to call backend if there are no attachments.
                                     this.submitAttachmentsMulti(res.data.id);
