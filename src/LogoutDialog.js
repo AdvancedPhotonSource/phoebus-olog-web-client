@@ -23,6 +23,7 @@ import Button from 'react-bootstrap/Button';
 import './css/olog.css';
 // Need axios for back-end access as the "fetch" API does not support CORS cookies.
 import axios from 'axios';
+import customization from './customization';
 
 class LogoutDialog extends Component{
 
@@ -38,7 +39,7 @@ class LogoutDialog extends Component{
     logout = (event) => {
         event.preventDefault();
 
-        axios.get(`${process.env.REACT_APP_BASE_URL}/logout`, { withCredentials: true })
+        axios.get(`${customization.urlRoot}/${process.env.REACT_APP_BASE_URL}/logout`, { withCredentials: true, baseURL: customization.urlRoot })
           .then(res => {
             this.setState({logoutError: ""});
             this.props.setUserData({userName: "", roles: []});

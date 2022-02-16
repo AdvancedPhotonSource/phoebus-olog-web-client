@@ -46,12 +46,14 @@ class LogHistory extends Component{
     }
 
     search = () => {
+      if(this.state.logHistory && !this.state.logHistory.length) {
         fetch(`${process.env.REACT_APP_BASE_URL}/logs?properties=Log Entry Group.id.` + getLogEntryGroupId(this.props.currentLogEntry.properties))
         .then(response => response.json())
         .then(data => {
             let logs = sortLogsDateCreated(data, false);
             this.setState({ logHistory: logs});
         });
+      }
     }
 
     render(){
@@ -62,7 +64,7 @@ class LogHistory extends Component{
               return(
                 <div key={index}>
                     <div className="separator" >
-                        <OlogMoment date={row.createdDate}/>, {row.owner}, {row.title}
+                        <OlogMoment date={row.createdDate}/>, {row.owner}, {row.title} <span style={{float: "right"}}>{row.id}</span>
                     </div>
 
                     <div style={{paddingTop: "5px", wordWrap: "break-word"}}
@@ -74,7 +76,7 @@ class LogHistory extends Component{
             logGroupItems =
                 <div>
                     <div className="separator" >
-                        <OlogMoment date={this.props.currentLogEntry.createdDate}/>, {this.props.currentLogEntry.owner}, {this.props.currentLogEntry.title}
+                        <OlogMoment date={this.props.currentLogEntry.createdDate}/>, {this.props.currentLogEntry.owner}, {this.props.currentLogEntry.title} <span style={{float: "right"}}>{this.props.currentLogEntry.id}</span>
                     </div>
 
                     <div style={{paddingTop: "5px", wordWrap: "break-word"}}

@@ -42,7 +42,7 @@ class MainApp extends Component {
             hitCount: 0
           },
           searchInProgress: false,
-          logGroupRecords: [],
+//          logGroupRecords: [],
           showFilters: false,
           searchParams: {}
         };
@@ -50,6 +50,7 @@ class MainApp extends Component {
     cookies = new Cookies();
 
     componentDidMount = () =>{
+        this.props.setReplyAction(false);
     }
 
     search = (sortOrder, from, size, callback) => {
@@ -90,11 +91,7 @@ class MainApp extends Component {
     setCurrentLogEntry = (logEntry) => {
         this.setState({selectedLogEntryId: logEntry.id});
         this.props.setCurrentLogEntry(logEntry);
-        this.setState({showGroup: false});
-    }
-
-    setLogGroupRecords = (recs) => {
-        this.setState({logGroupRecords: recs});
+//        this.setState({showGroup: false});
     }
 
     toggleFilters = () => {
@@ -129,7 +126,7 @@ class MainApp extends Component {
               <LogDetails {...this.state} {...this.props}
                 setCurrentLogEntry={this.setCurrentLogEntry}
                 setReplyAction={this.props.setReplyAction}
-                setLogGroupRecords={this.setLogGroupRecords}
+                setLogGroupRecords={this.props.setLogGroupRecords}
                 setShowGroup={this.props.setShowGroup} />
             </Col>
           </Row>

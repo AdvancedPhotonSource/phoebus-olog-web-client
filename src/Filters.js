@@ -90,6 +90,7 @@ class Filters extends Component{
         }
         this.setState({searchCriteria: copy}, 
             () =>  {
+
                  let searchParams = {};
                  let tagsString = this.state.searchCriteria.tags.join(",");
                  if(tagsString !== ''){
@@ -159,7 +160,7 @@ class Filters extends Component{
                                     onChange={(e) => this.inputChanged(e, 'text')}/>
                             </td>
                         </tr>
-                        { customization.level &&
+                        {customization.level &&  
                         <>
                         <tr>
                             <td colSpan="2">{customization.level}:</td>

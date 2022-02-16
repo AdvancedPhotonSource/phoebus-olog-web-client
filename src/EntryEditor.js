@@ -54,41 +54,109 @@ class EntryEditor extends Component{
         logEntryGroupProperty: null,
         availableProperties: [],
         showHtmlPreview: false,
-        createInProgress: false
+        createInProgress: false,
+        currentLogEntry: null,
+        replyAction: true,
+        showError: false
     }
 
     fileInputRef = React.createRef();
     titleRef = React.createRef();
     descriptionRef = React.createRef();
-   
-    componentDidMount = () => { 
 
+    componentDidMount = () => {
+        var id = 0;
+        if (this.props.match.params.id !== undefined || this.props.match.params.id !== "") {
+            id = this.props.match.params.id;
+        }
+        this.loadLogEntry(id);
         // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
         // Copy relevant fields to the state of this class, taking into account that a Reply
         // may or may not exist in the template.
-        if(this.props.replyAction && this.props.currentLogEntry){
-            let p = [];
-            this.props.currentLogEntry.properties.forEach((property, i) => {
+        //var currentLogEntry = this.props.getCurrentLogEntry();
+        //this.setState({logEntry: currentLogEntry});
+        //var replyAction = this.props.getReplyAction();
+        if(id > 0 ){
+            this.props.setReplyAction(true);
+/*            let p = [];
+            currentLogEntry.properties.forEach((property, i) => {
                 p.push(property);
             });
+            if(!getLogEntryGroupId(currentLogEntry.properties)){
+                let property = newLogEntryGroup();
+                p.push(property);
+            }
             this.setState({
-                selectedLogbooks: this.props.currentLogEntry.logbooks,
-                selectedTags: this.props.currentLogEntry.tags,
+                selectedLogbooks: currentLogEntry.logbooks,
+                selectedTags: currentLogEntry.tags,
                 level: customization.defaultLevel,
                 selectedProperties: p
             });
-            this.titleRef.current.value = this.props.currentLogEntry.title;
-        } else {
+            this.titleRef.current.value = this.state.currentLogEntry.title;
+*/        } else {
             //If user is not replying to a log entry, create default template for log entry description
             this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
         }
         this.getAvailableProperties();
     }
 
+    loadLogEntry = (id) => {
+        if(id < 1){
+            this.setState({replyAction: false});
+            this.props.setReplyAction(false);
+            return;
+        }
+        fetch(`${process.env.REACT_APP_BASE_URL}/logs/` + id)
+        .then(response => {
+            if(response.ok){
+                return response.json();
+            }
+            else{
+                throw Error("Server returned error.");
+            }
+        })
+        .then(data => {
+          if(data){
+              this.setState({currentLogEntry: data});
+              this.setState({replyAction: true});
+              this.props.setReplyAction(true);
+              this.props.setCurrentLogEntry(data);
+            let p = [];
+            data.properties.forEach((property, i) => {
+                p.push(property);
+            });
+            if(!getLogEntryGroupId(data.properties)){
+                let property = newLogEntryGroup();
+                p.push(property);
+            }
+            this.setState({
+                selectedLogbooks: data.logbooks,
+                selectedTags: data.tags,
+                level: customization.defaultLevel,
+                selectedProperties: p
+            });
+            this.titleRef.current.value = data.title;
+          }
+        })
+        .catch(() => {
+            this.setState({currentLogEntry : null});
+            this.setState({showError : true});
+        });
+    }
+
+    getCurrentLogEntry = () => {
+        return this.state.currentLogEntry;
+    }
+
+    getReplyAction = () => {
+        return this.state.replyAction;
+    }
+
+
     componentDidUpdate = (nextProps, nextState) => {
         // The below will ensure that when user has selected Reply and then New Log Entry,
         // the entry being edited does not contain any copied data.
-        if(nextProps.replyAction !== this.props.replyAction){
+        if(nextState.replyAction !== this.state.replyAction){
             this.setState({selectedLogbooks: [], 
                 selectedTags: [], 
                 level: customization.defaultLevel, 
@@ -191,7 +259,8 @@ class EntryEditor extends Component{
                         'Content-Type': 'multipart/form-data',
                         'Accept': 'application/json'
                     },
-                    withCredentials: true
+                    withCredentials: true,
+                    baseURL: customization.urlRoot
                 });
         }
     }
@@ -209,6 +278,7 @@ class EntryEditor extends Component{
         if(!promise){
             this.props.setUserData({});
             this.setState({createInProgress: false});
+            console.log("not promise");
             return;
         }
         else{
@@ -216,6 +286,7 @@ class EntryEditor extends Component{
                 if(!data){
                     this.props.setUserData({});
                     this.setState({createInProgress: false});
+                    console.log("no data");
                     return;
                 }
                 else{
@@ -233,7 +304,7 @@ class EntryEditor extends Component{
                             description: this.descriptionRef.current.value
                         }
                         let url = this.props.replyAction ? 
-                            `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark&inReplyTo=` + this.props.currentLogEntry.id :
+                            `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark&inReplyTo=` + this.state.currentLogEntry.id :
                             `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark`;
                         axios.put(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader() })
                             .then(res => {
@@ -281,7 +352,7 @@ class EntryEditor extends Component{
     }
 
     showGroup = () => {
-        if (getLogEntryGroupId(this.props.currentLogEntry.properties)) {
+        if (getLogEntryGroupId(this.state.currentLogEntry.properties)) {
             return true
         }
         return false;
@@ -372,7 +443,11 @@ class EntryEditor extends Component{
 
         return(
             <>
-               
+            {this.state.showError &&
+                <h5>Log record id {this.props.match.params.id} not found</h5>
+            }
+            { !this.state.showError &&
+            <>   
                 <LoadingOverlay
                             active={this.state.createInProgress}
                             spinner
@@ -484,8 +559,8 @@ class EntryEditor extends Component{
                                 {propertyItems}              
                             </Form.Group>
                         </Form.Row>}
-                        { this.props.currentLogEntry &&
-                                <LogHistory currentLogEntry={this.props.currentLogEntry} showGroup={this.showGroup}/>
+                        { this.getCurrentLogEntry() && this.getReplyAction() &&
+                                <LogHistory currentLogEntry={this.getCurrentLogEntry()} showGroup={this.showGroup}/>
                         }
                         </Container>
                     </LoadingOverlay>
@@ -511,6 +586,8 @@ class EntryEditor extends Component{
                     setShowHtmlPreview={this.setShowHtmlPreview}
                     getCommonmarkSrc={this.getCommonmarkSrc}
                     getAttachedFiles={this.getAttachedFiles}/>
+            </>
+            }
             </>
         )
     }

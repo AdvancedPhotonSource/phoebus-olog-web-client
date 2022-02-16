@@ -20,6 +20,7 @@ import React, { Component } from 'react';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import customization from './customization';
 
 // Need axios for back-end access as the "fetch" API does not support CORS cookies.
 import axios from 'axios'
@@ -46,7 +47,7 @@ class LoginDialog extends Component{
         formData.append("username", this.userNameRef.current.value);
         formData.append("password", this.passwordRef.current.value);
        
-        axios.post(`${process.env.REACT_APP_BASE_URL}/login`, formData,  { withCredentials: true })
+        axios.post(`${customization.urlRoot}/${process.env.REACT_APP_BASE_URL}/login`, formData,  { withCredentials: true, baseURL: customization.urlRoot })
          .then(res => {
             this.setState({loginError: ""});
             this.props.setUserData(res.data);
