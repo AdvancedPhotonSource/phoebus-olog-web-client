@@ -35,7 +35,7 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup } from './utils';
+import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, ologClientInfoHeader } from './utils';
 import HtmlPreview from './HtmlPreview';
 import LogHistory from './LogHistory';
 import LoadingOverlay from 'react-loading-overlay';
@@ -71,7 +71,7 @@ class EntryEditor extends Component{
         }
         this.loadLogEntry(id);
         // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
-        // Copy relevant fields to the state of this class, taking into account that a Log Entry Group
+        // Copy relevant fields to the state of this class, taking into account that a Reply
         // may or may not exist in the template.
         //var currentLogEntry = this.props.getCurrentLogEntry();
         //this.setState({logEntry: currentLogEntry});
@@ -265,34 +265,6 @@ class EntryEditor extends Component{
         }
     }
 
-    updateCurrentLogEntry = () => {
-        const logEntry = {
-            id: this.state.currentLogEntry.id,
-            logbooks: this.state.currentLogEntry.logbooks,
-            tags: this.state.currentLogEntry.logbooks.tags,
-            properties: this.state.selectedProperties,
-            title: this.state.currentLogEntry.title,
-            level: this.state.currentLogEntry.level,
-            description: this.state.currentLogEntry.source,
-            source: null
-        };
-        const { history } = this.props;
-        axios.post(`${process.env.REACT_APP_BASE_URL}/logs/` + this.state.currentLogEntry.id + `?markup=commonmark`, logEntry, { withCredentials: true, baseURL: customization.urlRoot })
-        .then(res => {
-            this.setState({createInProgress: false});
-            history.push('/');
-        })
-        .catch(error => {
-            if(error.response && (error.response.status === 401 || error.response.status === 403)){
-                alert('You are currently not authorized to create a log entry.')
-            }
-            else if(error.response && (error.response.status >= 500)){
-                alert('Failed to create log entry.')
-            }
-            this.setState({createInProgress: false});
-        });
-    }
-
     selectionsValid = () => {
         this.setState({logbookSelectionValid: this.state.selectedLogbooks.length > 0});
         return this.state.logbookSelectionValid;
@@ -331,20 +303,16 @@ class EntryEditor extends Component{
                             level: this.state.level,
                             description: this.descriptionRef.current.value
                         }
-                        axios.put(`${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark`, logEntry, { withCredentials: true, baseURL: customization.urlRoot })
+                        let url = this.props.replyAction ? 
+                            `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark&inReplyTo=` + this.state.currentLogEntry.id :
+                            `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark`;
+                        axios.put(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader() })
                             .then(res => {
                                 if(this.state.attachedFiles.length > 0){ // No need to call backend if there are no attachments.
                                     this.submitAttachmentsMulti(res.data.id);
                                 }
-                                // If the currentLogRecord is defined then user is creating a reply entry. So we need to update the currentLogRecord 
-                                // with the Log Entry Group, but only if the currentLogRecord does not yet contain it.
-                                if(this.state.replyAction  && !getLogEntryGroupId(this.state.currentLogEntry.properties)){
-                                    this.updateCurrentLogEntry();
-                                }
-                                else{
-                                    this.setState({createInProgress: false});
-                                    history.push('/');
-                                }
+                                this.setState({createInProgress: false});
+                                history.push('/');
                             })
                             .catch(error => {
                                 if(error.response && (error.response.status === 401 || error.response.status === 403)){
@@ -355,7 +323,6 @@ class EntryEditor extends Component{
                                 }
                                 this.setState({createInProgress: false});
                             });
-                        
                     }
                     return;
                 }
