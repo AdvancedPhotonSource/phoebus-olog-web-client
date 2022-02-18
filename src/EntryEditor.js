@@ -125,10 +125,6 @@ class EntryEditor extends Component{
             data.properties.forEach((property, i) => {
                 p.push(property);
             });
-            if(!getLogEntryGroupId(data.properties)){
-                let property = newLogEntryGroup();
-                p.push(property);
-            }
             this.setState({
                 selectedLogbooks: data.logbooks,
                 selectedTags: data.tags,
@@ -303,7 +299,7 @@ class EntryEditor extends Component{
                             level: this.state.level,
                             description: this.descriptionRef.current.value
                         }
-                        let url = this.props.replyAction ? 
+                        let url = this.state.replyAction ? 
                             `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark&inReplyTo=` + this.state.currentLogEntry.id :
                             `${process.env.REACT_APP_BASE_URL}/logs?markup=commonmark`;
                         axios.put(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader(), baseURL: customization.urlRoot })
