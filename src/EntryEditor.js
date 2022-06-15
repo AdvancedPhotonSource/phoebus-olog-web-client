@@ -57,7 +57,10 @@ class EntryEditor extends Component{
         createInProgress: false,
         currentLogEntry: null,
         replyAction: true,
-        showError: false
+        showError: false,
+        cursorSelStart: null,
+        cursorSelEnd: null,
+        currentClipboardImageObj: null
     }
 
     fileInputRef = React.createRef();
@@ -65,6 +68,7 @@ class EntryEditor extends Component{
     descriptionRef = React.createRef();
 
     componentDidMount = () => {
+        document.addEventListener("keydown", this.addTimestamp, false);
         var id = 0;
         if (this.props.match.params.id !== undefined || this.props.match.params.id !== "") {
             id = this.props.match.params.id;
@@ -98,6 +102,10 @@ class EntryEditor extends Component{
             this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
         }
         this.getAvailableProperties();
+    }
+
+    componentWillUnmount(){
+        document.removeEventListener("keydown", this.addTimestamp, false);
     }
 
     loadLogEntry = (id) => {
@@ -138,6 +146,20 @@ class EntryEditor extends Component{
             this.setState({currentLogEntry : null});
             this.setState({showError : true});
         });
+    }
+
+    addTimestamp = (e) => {
+      if (e.altKey && e.code === 'KeyT') {
+        var timestampMarkup = new Date().toLocaleString() + "";
+        if (isNaN(this.descriptionRef.current.selectionStart) || isNaN(this.descriptionRef.current.selectionEnd)) {
+            this.descriptionRef.current.value += timestampMarkup;
+        } else {
+            var logString = this.descriptionRef.current.value;
+            var cursorLocation = this.descriptionRef.current.selectionStart + timestampMarkup.length;
+            this.descriptionRef.current.value = logString.substring(0, this.descriptionRef.current.selectionStart) + timestampMarkup + logString.substring(this.descriptionRef.current.selectionEnd, logString.length);
+            this.descriptionRef.current.selectionStart = this.descriptionRef.current.selectionEnd = cursorLocation;
+        }
+      }
     }
 
     getCurrentLogEntry = () => {
@@ -363,11 +385,53 @@ class EntryEditor extends Component{
         this.setState({selectedProperties: properties});
     }
 
+    handlePaste = (e) => {
+        if (typeof e.clipboardData.files[0] === 'undefined' || e.clipboardData.files[0] === null) {
+            return false;
+        } else {
+            e.preventDefault();
+        }
+        var  currentFile = e.clipboardData.files[0];
+        this.setState({ currentClipboardImageObj: currentFile });
+        this.showEmbedDialog();
+    }
+
+    handleDrop = (e) => {
+        if (typeof e.dataTransfer.files[0] === 'undefined' || e.dataTransfer.files[0] === null) {
+            return false;
+        } else {
+            e.preventDefault();
+        }
+        var  currentFile = e.dataTransfer.files[0];
+        this.setState({ currentClipboardImageObj: currentFile });
+        this.showEmbedDialog();
+    }
+
+    showEmbedDialog = () => {
+        this.setState({showEmbedImageDialog: true});
+        this.setState({cursorSelStart: this.descriptionRef.current.selectionStart});
+        this.setState({cursorSelEnd: this.descriptionRef.current.selectionEnd});
+    }
+
+    onClickEmbeddedImage = () => {
+        this.setState({ currentClipboardImageObj: null });
+        this.showEmbedDialog();
+    }
+
     addEmbeddedImage = (file, width, height) => {
         this.setState({showEmbedImageDialog: false});
+        this.setState({ currentClipboardImageObj: null });
         const id = uuidv4();
         var imageMarkup = "![](attachment/" + id + "){width=" + width + " height=" + height + "}";
-        this.descriptionRef.current.value += imageMarkup;
+        if (isNaN(this.state.cursorSelStart)   || isNaN(this.state.cursorSelEnd)) {
+            this.descriptionRef.current.value += imageMarkup;
+        } else {
+            var logString = this.descriptionRef.current.value;
+            var cursorLocation = this.state.cursorStart + imageMarkup.length;
+            this.descriptionRef.current.value = logString.substring(0, this.state.cursorSelStart) + imageMarkup + logString.substring(this.state.cursorSelEnd, logString.length);
+            this.descriptionRef.current.selectionStart = this.descriptionRef.current.selectionEnd = cursorLocation;
+            this.descriptionRef.selectionStart = this.descriptionRef.selectionEnd = cursorLocation;
+        }
         const ologAttachment = new OlogAttachment(file, id);
         this.setState({attachedFiles: [...this.state.attachedFiles, ologAttachment]});
     }
@@ -517,6 +581,8 @@ class EntryEditor extends Component{
                             <Form.Control
                                 as="textarea" 
                                 rows="9"
+                                onPaste={this.handlePaste}
+                                onDrop={this.handleDrop}
                                 placeholder="Comments"
                                 ref={this.descriptionRef}/>
                         </Form.Row>
@@ -531,7 +597,7 @@ class EntryEditor extends Component{
                                     ref={ this.fileInputRef }
                                     onChange={ this.onFileChanged } />
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
-                                    onClick={() => this.setState({showEmbedImageDialog: true})}>
+                                    onClick={ this.onClickEmbeddedImage }>
                                 Embed Image
                             </Button>
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
@@ -575,6 +641,7 @@ class EntryEditor extends Component{
                 }
 
                 <EmbedImageDialog showEmbedImageDialog={this.state.showEmbedImageDialog} 
+                    imageObj={this.state.currentClipboardImageObj}
                     setShowEmbedImageDialog={this.setShowEmbeddImageDialog}
                     addEmbeddedImage={this.addEmbeddedImage}/>
 

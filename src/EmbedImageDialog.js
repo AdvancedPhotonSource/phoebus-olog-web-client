@@ -38,6 +38,7 @@ class EmbedImageDialog extends Component{
 
     nameRef = React.createRef();
     fileInputRef = React.createRef();
+    fileNameRef = React.createRef();
 
     addEmbeddedImage = (event) => {
         event.preventDefault();
@@ -84,7 +85,7 @@ class EmbedImageDialog extends Component{
         this.fileInputRef.current.click();
     }
 
-    reset = () => {
+    reset = (imageObj) => {
         this.setState({scalingFactor: "1.0", 
             imageAttachment: null,
             scaleValid: true,
@@ -92,6 +93,14 @@ class EmbedImageDialog extends Component{
             originalImageHeight: 0,
             imageWidth: "",
             imageHeight: ""})
+        if (imageObj) {
+            this.setState({imageAttachment: imageObj},
+                () => {
+                    this.checkImageSize(this.state.imageAttachment, this.setSize);
+                });
+            this.fileNameRef.current.value = imageObj.name;
+        }
+        this.fileInputRef.current.value = null;
     }
 
     scalingFactorChanged = (event) => {
@@ -113,7 +122,7 @@ class EmbedImageDialog extends Component{
         return(
             <Modal show={this.props.showEmbedImageDialog} 
                 onHide={() => this.props.setShowEmbedImageDialog(false)}
-                onShow={() => this.reset()}>
+                onShow={() => this.reset(this.props.imageObj)}>
                 <Form onSubmit={this.addEmbeddedImage}>
                     <Modal.Header closeButton>
                         <Modal.Title>Add Embedded Image</Modal.Title>
@@ -123,7 +132,10 @@ class EmbedImageDialog extends Component{
                         <Form.Row>
                             <Form.Label style={{marginTop: "0.5rem"}}>File</Form.Label>
                             <Form.Control readOnly
-                                type="text" as={Col} style={{marginLeft: "5px", marginRight:"5px"}}>{this.state.imageAttachment ? this.state.imageAttachment.name : ""}</Form.Control>
+                                type="text"
+                                as={Col}
+                                ref={ this.fileNameRef }
+                                style={{marginLeft: "5px", marginRight:"5px"}}>{this.state.imageAttachment ? this.state.imageAttachment.name : ""}</Form.Control>
                             <Button onClick={this.onBrowse}>Browse</Button>
                             <FormFile.Input
                                         hidden
