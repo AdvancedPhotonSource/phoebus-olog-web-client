@@ -43,8 +43,8 @@ class LogEntrySingleView extends Component{
             if(row.fileMetadataDescription.startsWith('image')){
                 return(
                     <ListGroup.Item key={index}>
-                    <a target="_blank" rel="noopener noreferrer" href={`${process.env.REACT_APP_BASE_URL}/logs/attachments/` + this.props.currentLogEntry.id + "/" + row.filename}>
-                        <Image key={index} src={`${process.env.REACT_APP_BASE_URL}/logs/attachments/` + this.props.currentLogEntry.id + "/" + row.filename} thumbnail/>
+                    <a target="_blank" rel="noopener noreferrer" href={`${process.env.REACT_APP_BASE_URL}/attachment/` + row.id}>
+                        <Image key={index} src={`${process.env.REACT_APP_BASE_URL}/attachment/` + row.id} thumbnail/>
                     </a>
                     </ListGroup.Item>
                 )
@@ -52,7 +52,7 @@ class LogEntrySingleView extends Component{
             else{
                 return (
                     <ListGroup.Item key={index}>
-                    <a target="_blank" rel="noopener noreferrer" href={`${process.env.REACT_APP_BASE_URL}/logs/attachments/` + this.props.currentLogEntry.id + "/" + row.filename}>
+                    <a target="_blank" rel="noopener noreferrer" href={`${process.env.REACT_APP_BASE_URL}/attachment/` + row.id}>
                     {row.filename}
                     </a>
                     </ListGroup.Item>

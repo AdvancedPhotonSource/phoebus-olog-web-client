@@ -25,6 +25,7 @@ import Form from 'react-bootstrap/Form';
 import FormFile from 'react-bootstrap/FormFile';
 import Modal from 'react-bootstrap/Modal';
 import { FaPlus } from 'react-icons/fa';
+import { BsFillAlarmFill } from 'react-icons/bs';
 import { withRouter } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import Attachment from './Attachment.js';
@@ -35,10 +36,12 @@ import PropertyEditor from './PropertyEditor';
 import PropertySelector from './PropertySelector';
 import Selection from './Selection';
 import checkSession from './session-check';
-import { getLogEntryGroupId, newLogEntryGroup, removeImageMarkup, ologClientInfoHeader } from './utils';
+import { getLogEntryGroupId, removeImageMarkup, ologClientInfoHeader } from './utils';
 import HtmlPreview from './HtmlPreview';
 import LogHistory from './LogHistory';
 import LoadingOverlay from 'react-loading-overlay';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+import Tooltip from 'react-bootstrap/Tooltip';
 
 class EntryEditor extends Component{
 
@@ -60,7 +63,9 @@ class EntryEditor extends Component{
         showError: false,
         cursorSelStart: null,
         cursorSelEnd: null,
-        currentClipboardImageObj: null
+        currentClipboardImageObj: null,
+        textareaBlur: true,
+        paste: false
     }
 
     fileInputRef = React.createRef();
@@ -77,29 +82,12 @@ class EntryEditor extends Component{
         // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
         // Copy relevant fields to the state of this class, taking into account that a Reply
         // may or may not exist in the template.
-        //var currentLogEntry = this.props.getCurrentLogEntry();
-        //this.setState({logEntry: currentLogEntry});
-        //var replyAction = this.props.getReplyAction();
         if(id > 0 ){
             this.props.setReplyAction(true);
-/*            let p = [];
-            currentLogEntry.properties.forEach((property, i) => {
-                p.push(property);
-            });
-            if(!getLogEntryGroupId(currentLogEntry.properties)){
-                let property = newLogEntryGroup();
-                p.push(property);
-            }
-            this.setState({
-                selectedLogbooks: currentLogEntry.logbooks,
-                selectedTags: currentLogEntry.tags,
-                level: customization.defaultLevel,
-                selectedProperties: p
-            });
-            this.titleRef.current.value = this.state.currentLogEntry.title;
-*/        } else {
+        } else {
             //If user is not replying to a log entry, create default template for log entry description
             this.descriptionRef.current.value = "# System: \n\n# Problem Description\n\n# Observation\n\n# Action Taken/Requested\n\n# Required Followup\n\n";
+            this.textareaChange();
         }
         this.getAvailableProperties();
     }
@@ -150,16 +138,28 @@ class EntryEditor extends Component{
 
     addTimestamp = (e) => {
       if (e.altKey && e.code === 'KeyT') {
+        this.setCursorPos();
+        this.embedTimestamp();
+      }
+    }
+
+    embedTimestamp = () => {
         var timestampMarkup = new Date().toLocaleString() + "";
-        if (isNaN(this.descriptionRef.current.selectionStart) || isNaN(this.descriptionRef.current.selectionEnd)) {
+        if (isNaN(this.state.cursorSelStart)   || isNaN(this.state.cursorSelEnd)) {
             this.descriptionRef.current.value += timestampMarkup;
+            this.descriptionRef.current.selectionStart = this.descriptionRef.current.selectionEnd = this.descriptionRef.current.value.length;
+            this.setState({cursorSelStart: this.descriptionRef.current.selectionStart,
+                       cursorSelEnd: this.descriptionRef.current.selectionEnd
+                      });
         } else {
             var logString = this.descriptionRef.current.value;
-            var cursorLocation = this.descriptionRef.current.selectionStart + timestampMarkup.length;
-            this.descriptionRef.current.value = logString.substring(0, this.descriptionRef.current.selectionStart) + timestampMarkup + logString.substring(this.descriptionRef.current.selectionEnd, logString.length);
+            var cursorLocation = this.state.cursorSelStart + timestampMarkup.length;
+            this.descriptionRef.current.value = logString.substring(0, this.state.cursorSelStart) + timestampMarkup + logString.substring(this.state.cursorSelEnd, logString.length);
             this.descriptionRef.current.selectionStart = this.descriptionRef.current.selectionEnd = cursorLocation;
+            this.setState({cursorSelStart: this.descriptionRef.current.selectionStart,
+                       cursorSelEnd: this.descriptionRef.current.selectionEnd
+                      });
         }
-      }
     }
 
     getCurrentLogEntry = () => {
@@ -385,14 +385,21 @@ class EntryEditor extends Component{
         this.setState({selectedProperties: properties});
     }
 
+    textareaChange = () => {
+        this.descriptionRef.current.style.height = "auto";
+        this.descriptionRef.current.style.height = this.descriptionRef.current.scrollHeight + "px";
+    }
+
     handlePaste = (e) => {
         if (typeof e.clipboardData.files[0] === 'undefined' || e.clipboardData.files[0] === null) {
             return false;
         } else {
             e.preventDefault();
         }
+        this.setState({paste: true});
         var  currentFile = e.clipboardData.files[0];
         this.setState({ currentClipboardImageObj: currentFile });
+        this.setCursorPos();
         this.showEmbedDialog();
     }
 
@@ -402,15 +409,31 @@ class EntryEditor extends Component{
         } else {
             e.preventDefault();
         }
+        this.setState({paste: true});
         var  currentFile = e.dataTransfer.files[0];
         this.setState({ currentClipboardImageObj: currentFile });
+        this.setCursorPos();
         this.showEmbedDialog();
     }
 
     showEmbedDialog = () => {
+
         this.setState({showEmbedImageDialog: true});
-        this.setState({cursorSelStart: this.descriptionRef.current.selectionStart});
-        this.setState({cursorSelEnd: this.descriptionRef.current.selectionEnd});
+    }
+
+    onTextareaFocus = () => {
+        if(this.state.paste) {
+            this.descriptionRef.current.selectionStart = this.state.cursorSelStart;
+            this.setState({ paste: false });
+        }
+        this.setState({ textareaBlur: false});
+    }
+
+    setCursorPos = () => {
+        if (!this.state.textareaBlur)
+        this.setState({cursorSelStart: this.descriptionRef.current.selectionStart,
+                       cursorSelEnd: this.descriptionRef.current.selectionEnd
+                      });
     }
 
     onClickEmbeddedImage = () => {
@@ -425,12 +448,19 @@ class EntryEditor extends Component{
         var imageMarkup = "![](attachment/" + id + "){width=" + width + " height=" + height + "}";
         if (isNaN(this.state.cursorSelStart)   || isNaN(this.state.cursorSelEnd)) {
             this.descriptionRef.current.value += imageMarkup;
+            this.descriptionRef.selectionStart = this.descriptionRef.selectionEnd = this.descriptionRef.current.value.length;
+            this.setState({cursorSelStart: this.descriptionRef.current.selectionStart,
+                       cursorSelEnd: this.descriptionRef.current.selectionEnd
+                      });
         } else {
             var logString = this.descriptionRef.current.value;
-            var cursorLocation = this.state.cursorStart + imageMarkup.length;
+            var cursorLocation = this.state.cursorSelStart + imageMarkup.length;
             this.descriptionRef.current.value = logString.substring(0, this.state.cursorSelStart) + imageMarkup + logString.substring(this.state.cursorSelEnd, logString.length);
             this.descriptionRef.current.selectionStart = this.descriptionRef.current.selectionEnd = cursorLocation;
-            this.descriptionRef.selectionStart = this.descriptionRef.selectionEnd = cursorLocation;
+            //this.descriptionRef.selectionStart = this.descriptionRef.selectionEnd = cursorLocation;
+            this.setState({cursorSelStart: this.descriptionRef.current.selectionStart,
+                       cursorSelEnd: this.descriptionRef.current.selectionEnd
+                      });
         }
         const ologAttachment = new OlogAttachment(file, id);
         this.setState({attachedFiles: [...this.state.attachedFiles, ologAttachment]});
@@ -581,8 +611,11 @@ class EntryEditor extends Component{
                             <Form.Control
                                 as="textarea" 
                                 rows="9"
+                                onChange={this.textareaChange}
                                 onPaste={this.handlePaste}
                                 onDrop={this.handleDrop}
+                                onBlur={ () => this.setState({ textareaBlur: true})}
+                                onFocus={ this.onTextareaFocus }
                                 placeholder="Comments"
                                 ref={this.descriptionRef}/>
                         </Form.Row>
@@ -597,13 +630,25 @@ class EntryEditor extends Component{
                                     ref={ this.fileInputRef }
                                     onChange={ this.onFileChanged } />
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
-                                    onClick={ this.onClickEmbeddedImage }>
+                                    onMouseDown={ this.setCursorPos }
+                                    onMouseUp={ this.onClickEmbeddedImage }>
                                 Embed Image
                             </Button>
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
                                     onClick={() => this.setState({showHtmlPreview: true})}>
                                 Preview
                             </Button>
+                            <OverlayTrigger delay={{ hide: 450, show: 300 }}
+                                overlay={(props) => (
+                                    <Tooltip {...props}>Timestamp (Alt+T)</Tooltip>
+                                )}
+                                rootClose
+                                placement="bottom">
+                            <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
+                                    onMouseDown={ this.setCursorPos } onMouseUp={ this.embedTimestamp }>
+                                <span><BsFillAlarmFill className="add-button"/></span>
+                            </Button>
+                            </OverlayTrigger>
                             <Button variant="secondary" size="sm" style={{marginLeft: "5px"}}
                                     onClick={() => window.open("https://commonmark.org/help/", "_blank")}>
                                 Commonmarkup Help
