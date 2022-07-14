@@ -39,7 +39,7 @@ class Filters extends Component{
         openLogbooks: false,
         openTags: false,
         searchCriteria: {
-            logbooks: [], // Used by logbooks selector
+            logbooks: '', // Used by logbooks selector
             tags: []      // Used by tags selector
           },
         startDate: new Date(), // Used by calendar component
@@ -56,15 +56,11 @@ class Filters extends Component{
     addLogbookToSearchCriteria = (logbookName, add) => {
         const copy = {...this.state.searchCriteria};
         if(add){
-            copy.logbooks.push(logbookName);
-        }
-        else{
-            copy.logbooks = copy.logbooks.filter(item => item !== logbookName);
-        }
+            copy.logbooks = logbookName;
         this.setState({searchCriteria: copy}, 
             () =>  {
                 let searchParams = {};
-                let logbooksString = this.state.searchCriteria.logbooks.join(",");
+                let logbooksString = this.state.searchCriteria.logbooks;
                 if(logbooksString !== ''){
                     searchParams = setSearchParam(this.props.searchParams, 'logbooks', logbooksString);
                 }
@@ -72,7 +68,9 @@ class Filters extends Component{
                     searchParams = removeSearchParam(this.props.searchParams, 'logbooks');
                 }
                 this.props.setSearchParams(searchParams);
+                this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
             });
+        }
     }
 
     /**
@@ -82,6 +80,16 @@ class Filters extends Component{
      */
     addTagToSearchCriteria = (tagName, add) => {
         const copy = {...this.state.searchCriteria};
+        if("tags" in this.props.searchParams) {
+            if(typeof(this.props.searchParams.tags) === "string" && this.props.searchParams.tags)
+                copy.tags = this.props.searchParams.tags.split(',');
+            if(typeof(this.props.searchParams.tags) === "array")
+                copy.tags = this.props.searchParams.tags.map((tag, index) => {
+                    if (tag)
+                        copy.tags.push(tag);
+                });
+        }
+
         if(add){
             copy.tags.push(tagName);
         }
@@ -90,9 +98,8 @@ class Filters extends Component{
         }
         this.setState({searchCriteria: copy}, 
             () =>  {
-
                  let searchParams = {};
-                 let tagsString = this.state.searchCriteria.tags.join(",");
+                 let tagsString = copy.tags.join(",");
                  if(tagsString !== ''){
                     searchParams = setSearchParam(this.props.searchParams, 'tags', tagsString);
                  }
@@ -100,6 +107,7 @@ class Filters extends Component{
                     searchParams = removeSearchParam(this.props.searchParams, 'tags');
                  }
                  this.props.setSearchParams(searchParams);
+                 this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
             });
     }
 
@@ -108,6 +116,7 @@ class Filters extends Component{
         let searchParams = setSearchParam(this.props.searchParams, 'start', start);
         this.props.setSearchParams(searchParams);
         this.setState({startDate: value}); // This is for the calendar component only
+        this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
     }
 
     setEndDate = (value) => {
@@ -115,6 +124,7 @@ class Filters extends Component{
         let searchParams = setSearchParam(this.props.searchParams, 'end', end);
         this.props.setSearchParams(searchParams);
         this.setState({endDate: value}); // This is for the calendar component only
+        this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
     }
 
     applyAndClose = () => {
@@ -130,6 +140,7 @@ class Filters extends Component{
         searchParams = removeSearchParam(this.props.searchParams, key);
       }
       this.props.setSearchParams(searchParams);
+      this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
     }
 
     render(){
@@ -184,7 +195,7 @@ class Filters extends Component{
                                 <Accordion.Collapse eventKey="0">
                                    <Logbooks
                                     logbooks={this.props.logbooks}
-                                    searchCriteria={this.state.searchCriteria}
+                                    searchParams={this.props.searchParams}
                                     addLogbookToSearchCriteria={this.addLogbookToSearchCriteria}/>
                                 </Accordion.Collapse>
                            </Accordion></td>
@@ -197,7 +208,7 @@ class Filters extends Component{
                                 </Accordion.Toggle>
                                 <Accordion.Collapse eventKey="0">
                                    <Tags tags={this.props.tags}
-                                        searchCriteria={this.state.searchCriteria}
+                                        searchParams={this.props.searchParams}
                                         addTagToSearchCriteria={this.addTagToSearchCriteria}/>
                                 </Accordion.Collapse>
                             </Accordion></td>

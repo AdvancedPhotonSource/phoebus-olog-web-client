@@ -55,50 +55,26 @@ class SearchResultList extends Component{
     }
 
     search = () => {
-        this.props.search(this.state.sortOrder, (this.state.currentPageIndex - 1) * this.state.pageSize, this.state.pageSize, this.updatePaginationControls);
-    }
-
-    updatePaginationControls = () => {
-        // Calculate page count
-        let newPageCount = Math.ceil(this.props.searchResult.hitCount / this.state.pageSize);
-        
-        this.setState({pageCount: newPageCount, pageItems: []}, () => {
-            let items = [];
-            // Calculate first index to render. This depends on the current page index as well as the
-            // total page count (which might be greater than the maximum number of buttons: 10).
-            let pagesToRender =  Math.min(9, this.state.pageCount - 1);
-            let firstIndex = Math.max(1, this.state.currentPageIndex - pagesToRender);
-            let lastIndex = firstIndex + pagesToRender;
-            for(let i = firstIndex; i <= lastIndex; i++){
-                items.push(<Pagination.Item 
-                    key={i} 
-                    active={i === this.state.currentPageIndex}
-                    onClick={() => this.goToPage(i)}>
-                    {i}
-                </Pagination.Item>)
-            }
-    
-            this.setState({pageItems: [...this.state.pageItems, ...items]});
-        });
+        this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
     }
 
     goToPage = (pageNumber) => {
-        this.setState({currentPageIndex: pageNumber}, () => {
-            this.search();
-        });
+        this.props.setCurrentPageIndex(pageNumber, true);
     }
 
     downButtonClicked = () => {
-        this.setState({currentPageIndex: 1, sortOrder: "down"}, () => this.search())
+        this.props.setCurrentPageIndex(1);
+        this.props.setSortOrder("down", true);
     }
 
     upButtonClicked = () => {
-        this.setState({currentPageIndex: 1, sortOrder: "up"}, () => this.search())
+        this.props.setCurrentPageIndex(1);
+        this.props.setSortOrder("up", true);
     }
 
     submit = (event) => {
         event.preventDefault();
-        this.search(this.state.sortOrder);
+        this.search(this.props.sortOrder);
     }
 
     setSearchString = (event) => {
@@ -138,14 +114,8 @@ class SearchResultList extends Component{
             if(pageCount === 0){
                 return;
             }
-            this.setState({pageSize: e.target.value})
+            this.props.setPageSize(e.target.value);
         }   
-    }
-
-    handleKeyDown = (e) => {
-        if(e.key === 'Enter'){
-            this.setState({currentPageIndex: 1}, () => this.search());
-        }
     }
 
     render(){
@@ -241,32 +211,32 @@ class SearchResultList extends Component{
                                 <Col style={{padding: '0px', maxWidth: '50px'}}>
                                 <Form.Control size="sm" 
                                     type="input"
-                                    value={this.state.pageSize}
+                                    value={this.props.pageSize}
                                     onChange={(e) => this.setPageSize(e)}
                                     onKeyDown={(e) => this.handleKeyDown(e)}/>
                                </Col>
                             </Row>
-                            <Row style={{visibility: this.state.pageCount < 2 ? 'hidden' : 'visible'}}>
+                            <Row style={{visibility: this.props.pageCount < 2 ? 'hidden' : 'visible'}}>
                                <Col style={{marginTop: '13px', padding: '0px'}}>
                                 <Pagination
                                     size='sm'> 
-                                    <Pagination.First disabled={this.state.currentPageIndex === 1}
+                                    <Pagination.First disabled={this.props.currentPageIndex === 1}
                                         onClick={() => this.goToPage(1)}
                                         style={{fontWeight: 'bold'}}>&#124;&lt;</Pagination.First>
-                                    <Pagination.Prev  onClick={() => this.goToPage(this.state.currentPageIndex - 1)}
-                                        disabled={this.state.currentPageIndex === 1}
+                                    <Pagination.Prev  onClick={() => this.goToPage(this.props.currentPageIndex - 1)}
+                                        disabled={this.props.currentPageIndex === 1}
                                         style={{fontWeight: 'bold'}} >&lt;</Pagination.Prev>
                                     {this.state.pageItems}
-                                    <Pagination.Next onClick={() => this.goToPage(this.state.currentPageIndex + 1)} 
-                                        disabled={this.state.currentPageIndex === this.state.pageCount}
+                                    <Pagination.Next onClick={() => this.goToPage(this.props.currentPageIndex + 1)}
+                                        disabled={this.props.currentPageIndex === this.props.pageCount}
                                         style={{fontWeight: 'bold'}}>&gt;</Pagination.Next>
-                                    <Pagination.Last disabled={this.state.currentPageIndex === this.state.pageCount}
-                                        onClick={() => this.goToPage(this.state.pageCount)}
+                                    <Pagination.Last disabled={this.props.currentPageIndex === this.props.pageCount}
+                                        onClick={() => this.goToPage(this.props.pageCount)}
                                         style={{fontWeight: 'bold'}}>&gt;&#124;</Pagination.Last>
                                     </Pagination>
                                 </Col>
                                 <Col style={{marginTop: '16px',  padding:'5px', maxWidth: '60px'}}>
-                                    {this.state.currentPageIndex} / {this.state.pageCount}
+                                    {this.props.currentPageIndex} / {this.props.pageCount}
                                 </Col>
                            </Row>
                        </Container>

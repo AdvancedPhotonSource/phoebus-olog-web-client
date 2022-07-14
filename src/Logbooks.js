@@ -17,30 +17,35 @@
  */
 import React, {Component} from 'react';
 import './css/olog.css';
-import FormCheck from 'react-bootstrap/FormCheck';
 
 /**
  * Component to show list of available logbooks and maintain selection of logbooks
  * to include in a search query.
  */
+
 class Logbooks extends Component{
 
     logbookSelectionChanged = (event) => {
-        this.props.addLogbookToSearchCriteria(event.target.id, event.target.checked);
+        this.props.addLogbookToSearchCriteria(event.target.value, event.target.checked);
     }
 
     render(){
         var items = this.props.logbooks.sort((a, b) => a.name.localeCompare(b.name)).map((row, index) => {
+            var check = false;
+            if("logbooks" in this.props.searchParams)
+                check = this.props.searchParams["logbooks"] === row.name;
             return (
-                <li key={index}>
-                    <FormCheck>
-                        <FormCheck.Input type="checkbox" 
-                            id={row.name}
-                            checked={this.props.searchCriteria.logbooks.includes(row.name)}
-                            onChange={this.logbookSelectionChanged}/>
-                        <FormCheck.Label>{row.name}</FormCheck.Label>
-                    </FormCheck>
-                </li>
+                <div className="radio">
+                    <label>
+                        <input
+                            type="radio"
+                            value={row.name}
+                            checked={check}
+                            onChange={this.logbookSelectionChanged}
+                        />
+                        {row.name}
+                    </label>
+                </div>
             )
         })       
         return (

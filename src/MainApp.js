@@ -27,6 +27,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import customization from './customization';
 import {queryStringToSearchParameters, searchParamsToQueryString, ologClientInfoHeader} from './utils.js';
 import Cookies from 'universal-cookie';
+import Pagination from 'react-bootstrap/Pagination';
 
 
 /**
@@ -44,13 +45,32 @@ class MainApp extends Component {
           searchInProgress: false,
 //          logGroupRecords: [],
           showFilters: false,
-          searchParams: {}
+          searchParams: {},
+          pageItems: [],
+          currentPageIndex: 1,
+          pageSize: customization.defaultPageSize,
+          pageCount: 1,
+          sortOrder: "down" // Need to maintain sort order here as pagination buttons trigger search.
         };
 
     cookies = new Cookies();
 
     componentDidMount = () =>{
         this.props.setReplyAction(false);
+
+      if(Object.values(this.state.searchParams).length === 0){
+        let searchParameters = {};
+        // Read from cookie
+        let searchParamsFromCookie = this.cookies.get('searchString');
+        // If this is empty/undefined, fall back to default search params defined in customization
+        if(!searchParamsFromCookie || searchParamsFromCookie === ''){
+          searchParameters = customization.defaultSearchParams;
+        }
+        else{
+          searchParameters = queryStringToSearchParameters(searchParamsFromCookie);
+        }
+        this.setState({searchParams: searchParameters});
+      }
     }
 
     search = (sortOrder, from, size, callback) => {
@@ -91,8 +111,50 @@ class MainApp extends Component {
     setCurrentLogEntry = (logEntry) => {
         this.setState({selectedLogEntryId: logEntry.id});
         this.props.setCurrentLogEntry(logEntry);
-//        this.setState({showGroup: false});
     }
+
+    setCurrentPageIndex = (index, search = false) => {
+        this.setState({currentPageIndex: index},
+        () => { if (search) this.search(this.state.sortOrder, (this.state.currentPageIndex - 1) * this.state.pageSize, this.state.pageSize, this.updatePaginationControls); });
+    }
+
+    setPageSize = (size) => {
+        this.setState({pageSize: size});
+    }
+
+    setPageCount = (count) => {
+        this.setState({pageCount: count});
+    }
+
+    setSortOrder = (order, search = false) => {
+        this.setState({sortOrder: order},
+        () => { if (search) this.search(this.state.sortOrder, (this.state.currentPageIndex - 1) * this.state.pageSize, this.state.pageSize, this.updatePaginationControls); });
+    }
+
+    updatePaginationControls = () => {
+        // Calculate page count
+        let newPageCount = Math.ceil(this.state.searchResult.hitCount / this.state.pageSize);
+        //this.setPageCount(newPageCount);
+        this.setState({pageCount: newPageCount, pageItems: []}, () => {
+            let items = [];
+            // Calculate first index to render. This depends on the current page index as well as the
+            // total page count (which might be greater than the maximum number of buttons: 10).
+            let pagesToRender =  Math.min(9, this.state.pageCount - 1);
+            let firstIndex = Math.max(1, this.state.currentPageIndex - pagesToRender);
+            let lastIndex = firstIndex + pagesToRender;
+            for(let i = firstIndex; i <= lastIndex; i++){
+                items.push(<Pagination.Item
+                    key={i}
+                    active={i === this.props.currentPageIndex}
+                    onClick={() => this.goToPage(i)}>
+                    {i}
+                </Pagination.Item>)
+            }
+
+            this.setState({pageItems: [...this.state.pageItems, ...items]});
+        });
+    }
+
 
     toggleFilters = () => {
         this.setState({showFilters: !this.state.showFilters});
@@ -112,7 +174,9 @@ class MainApp extends Component {
                 <Col xs={{span: 12, order: 3}} sm={{span: 12, order: 3}} md={{span: 12, order: 3}} lg={{span: 2, order: 1}} style={{padding: "2px"}}>
                   <Filters
                     {...this.state} {...this.props}
-                    setSearchParams={this.setSearchParams}/>
+                    setSearchParams={this.setSearchParams}
+                    updatePaginationControls={this.updatePaginationControls}
+                    search={this.search}/>
                 </Col>
             </Collapse>
             <Col xs={{span: 12, order: 2}} sm={{span: 12, order: 2}} md={{span: 12, order: 2}} lg={{span: 4, order: 2}} style={{padding: "2px"}}>
@@ -120,6 +184,11 @@ class MainApp extends Component {
                 setCurrentLogEntry={this.setCurrentLogEntry}
                 setSearchParams={this.setSearchParams}
                 search={this.search}
+                updatePaginationControls={this.updatePaginationControls}
+                setCurrentPageIndex={this.setCurrentPageIndex}
+                setPageSize={this.setPageSize}
+                setSortOrder={this.setSortOrder}
+                setPageCount={this.setPageCount}
                 toggleFilters={this.toggleFilters}/>
             </Col>
             <Col  xs={{span: 12, order: 1}} sm={{span: 12, order: 1}} md={{span: 12, order: 1}} lg={{span: this.state.showFilters ? 6 : 8, order: 3}} style={{padding: "2px"}}>

@@ -27,12 +27,15 @@ class Tags extends Component{
 
     render(){
         var items = this.props.tags && this.props.tags.sort((a, b) => a.name.localeCompare(b.name)).map((row, index) => {
+            var check = false;
+            if("tags" in this.props.searchParams)
+                check = this.props.searchParams["tags"].includes(row.name);
             return (
                 <li  key={index}>
                     <FormCheck>
                         <FormCheck.Input type="checkbox" 
                             id={row.name}
-                            checked={this.props.searchCriteria.tags.includes(row.name)}
+                            checked={check}
                             onChange={this.tagSelectionChanged}/>
                         <FormCheck.Label>{row.name}</FormCheck.Label>
                     </FormCheck>
