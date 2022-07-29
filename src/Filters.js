@@ -28,6 +28,7 @@ import DateTimePicker from 'react-datetime-picker';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import customization from './customization';
+import AddTagDialog from './AddTagDialog';
 
 /**
  * Component holding search criteria elements, i.e.
@@ -45,7 +46,8 @@ class Filters extends Component{
         startDate: new Date(), // Used by calendar component
         endDate: new Date(),   // Used by calendar component
         showSelectStartTime: false,
-        showSelectEndTime: false
+        showSelectEndTime: false,
+        showAddTag: false
     };
 
     /**
@@ -84,7 +86,7 @@ class Filters extends Component{
             if(typeof(this.props.searchParams.tags) === "string" && this.props.searchParams.tags)
                 copy.tags = this.props.searchParams.tags.split(',');
             if(typeof(this.props.searchParams.tags) === "array")
-                copy.tags = this.props.searchParams.tags.map((tag, index) => {
+                this.props.searchParams.tags.map((tag, index) => {
                     if (tag)
                         copy.tags.push(tag);
                 });
@@ -109,6 +111,10 @@ class Filters extends Component{
                  this.props.setSearchParams(searchParams);
                  this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
             });
+    }
+
+    setShowAddTag = (show) => {
+        this.setState({showAddTag: show});
     }
 
     setStartDate = (value) => {
@@ -207,8 +213,9 @@ class Filters extends Component{
                                     {this.state.openTags ? <FaChevronDown /> : <FaChevronRight/> } Tags
                                 </Accordion.Toggle>
                                 <Accordion.Collapse eventKey="0">
-                                   <Tags tags={this.props.tags}
+                                   <Tags tags={this.props.tags} {...this.props}
                                         searchParams={this.props.searchParams}
+                                        setShowAddTag={this.setShowAddTag}
                                         addTagToSearchCriteria={this.addTagToSearchCriteria}/>
                                 </Accordion.Collapse>
                             </Accordion></td>
@@ -299,6 +306,10 @@ class Filters extends Component{
                </Modal.Footer>
             </Modal>
             }
+            <AddTagDialog addTagDialogVisible={this.state.showAddTag}
+                setUserData={this.props.setUserData}
+                setShowAddTag={this.setShowAddTag}
+                refreshTags={this.props.refreshTags}/>
             </>
         )
     }

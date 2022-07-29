@@ -17,7 +17,9 @@
  */
 import React, {Component} from 'react'
 import './css/olog.css';
+import './css/bootstrap.css';
 import FormCheck from 'react-bootstrap/FormCheck';
+import Button from 'react-bootstrap/Button';
 
 class Tags extends Component{
 
@@ -44,7 +46,15 @@ class Tags extends Component{
          })
          
         return (
+             <>
              <ul className="olog-ul">{items}</ul>
+             <Button disabled={!this.props.userData.userName}
+             variant="secondary"
+             size="xs"
+             onClick={() => this.props.setShowAddTag(true)}>
+                 Add Tag
+             </Button>
+             </>
         )
     }
 }

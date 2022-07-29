@@ -20,6 +20,7 @@ import React, { Component } from 'react';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import checkSession from './session-check';
 
 // Need axios for back-end access as the "fetch" API does not support CORS cookies.
 import axios from 'axios'
@@ -35,13 +36,35 @@ class AddTagDialog extends Component{
     createTag = () => {
         var name = this.nameRef.current.value;
         // TODO add error handling if request fails.
-       axios.put(`${process.env.REACT_APP_BASE_URL}/tags/` + name, {name: name, state: "Active"}, { withCredentials: true })
-        .then(res => {
-            this.props.setShowAddTag(false);
-            this.props.refreshTags();
-        });
-      };
-
+        var promise = checkSession();
+        if(!promise){
+            this.props.setUserData({});
+            return;
+        }
+        else{
+            promise.then(data => {
+                if(!data){
+                    this.props.setUserData({});
+                    return;
+                }
+                else {
+                    axios.put(`${process.env.REACT_APP_BASE_URL}/tags/` + name, {name: name, state: "Active"}, { withCredentials: true })
+                    .then(res => {
+                        this.props.setShowAddTag(false);
+                        this.props.refreshTags();
+                    }).catch(error => {
+                        if(error.response && (error.response.status === 401 || error.response.status === 403)){
+                            alert('You are currently not logged in.')
+                        }
+                        else if(error.response && (error.response.status >= 500)){
+                            alert('Failed to create log entry.')
+                        }
+                        this.props.setShowAddTag(false);
+                    });
+                }
+            });
+        }
+    }
     
     render(){
         return(

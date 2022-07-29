@@ -126,6 +126,8 @@ class App extends Component{
                                 setLogGroupRecords={this.setLogGroupRecords}
                                 setReplyAction={this.setReplyAction}
                                 setShowGroup={this.setShowGroup}
+                                refreshTags={this.refreshTags}
+                                setUserData={this.setUserData}
                                 />
                         </Route>
                         <Route path="/edit/:id" render={(props) =>

@@ -50,10 +50,6 @@ class SearchResultList extends Component{
 
     cookies = new Cookies();
 
-    componentDidMount = () => {
-        this.search();
-    }
-
     search = () => {
         this.props.search(this.props.sortOrder, (this.props.currentPageIndex - 1) * this.props.pageSize, this.props.pageSize, this.props.updatePaginationControls);
     }

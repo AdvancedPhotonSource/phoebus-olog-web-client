@@ -69,8 +69,12 @@ class MainApp extends Component {
         else{
           searchParameters = queryStringToSearchParameters(searchParamsFromCookie);
         }
-        this.setState({searchParams: searchParameters});
+        this.setState({searchParams: searchParameters}, () => {this.defaultSearch();});
       }
+    }
+
+    defaultSearch = () => {
+        this.search(this.state.sortOrder, (this.state.currentPageIndex - 1) * this.state.pageSize, this.state.pageSize, this.updatePaginationControls);
     }
 
     search = (sortOrder, from, size, callback) => {
