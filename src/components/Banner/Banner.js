@@ -71,6 +71,26 @@ class Banner extends Component {
         }
         else{
           this.props.setReplyAction(false);
+          this.props.setDraftAction(false);
+        }
+      });
+    }
+  }
+
+  handleDraft = () => {
+    
+    var promise = checkSession();
+    if(!promise){
+      this.props.setShowLogin(true);
+    }
+    else{
+      promise.then(data => {
+        if(!data){
+          this.props.setShowLogin(true);
+        }
+        else{
+          this.props.setReplyAction(false);
+          this.props.setDraftAction(true);
         }
       });
     }
@@ -105,6 +125,12 @@ class Banner extends Component {
             <Button disabled={!this.props.userData.userName} 
               variant="primary" 
               onClick={() => this.handleNewLogEntry()}>New Log Entry</Button>
+          </Link>
+          <Link to="/edit">
+            <Button disabled={!this.props.userData.userName} 
+              variant="primary"
+              style={{marginLeft: "5px"}}
+              onClick={() => this.handleDraft()}>Draft</Button>
           </Link>
           <Nav className="justify-content-end" style={{ width: "100%" }}>
             <Button onClick={this.handleClick}>{this.props.userData.userName ? this.props.userData.userName : 'Sign In'}</Button>

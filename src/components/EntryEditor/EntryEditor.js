@@ -38,13 +38,14 @@ import Select from 'react-select';
 import { useState } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetPropertiesQuery } from '../../services/ologApi.js';
 
 const EntryEditor = ({
     tags,
     logbooks,
-    replyAction,
+    replyAction, draftAction,
     userData, setUserData
 }) => {
 
@@ -52,8 +53,10 @@ const EntryEditor = ({
     const [selectedTags, setSelectedTags] = useState([]);
     const [level, setLevel] = useState(customization.defaultLevel);
     const [attachedFiles, setAttachedFiles] = useState([]);
+    const [attachedFilesStatic, setAttachedFilesStatic] = useState([]);
     const [validated, setValidated] = useState(false);
     const [selectedProperties, setSelectedProperties] = useState([]);
+    const [selectedLogId, setSelectedLogId] = useState("");
     const [showAddProperty, setShowAddProperty] = useState(false);
     const [showEmbedImageDialog, setShowEmbedImageDialog] = useState(false);
     const {data: availableProperties} = useGetPropertiesQuery();
@@ -67,33 +70,51 @@ const EntryEditor = ({
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-
-        // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
-        // Copy relevant fields to the state of this class, taking into account that a Reply
-        // may or may not exist in the template.
-        if(replyAction && currentLogEntry){
-            setSelectedLogbooks(currentLogEntry.logbooks);
-            setSelectedTags(currentLogEntry.tags);
+    const fillMetadata = useCallback((logEntry) => {
+        if (logEntry) {
+            setSelectedLogId(logEntry.id);
+            setSelectedLogbooks(logEntry.logbooks);
+            setSelectedTags(logEntry.tags);
             setLevel(customization.defaultLevel);
-            titleRef.current.value = currentLogEntry.title;
-        }
-
-    }, [replyAction, currentLogEntry]);
-
-    // The below will ensure that when user has selected Reply and then New Log Entry,
-    // the entry being edited does not contain any copied data.
-    useEffect(() => {
-
-        if(!replyAction) {
+            titleRef.current.value = logEntry.title;
+            if(draftAction) { 
+                descriptionRef.current.value = logEntry.source;
+                setAttachedFilesStatic(logEntry.attachments);
+                setSelectedProperties(logEntry.properties);
+                //logEntry.attachments.map(attachment => {attachedFilesStatic.push(attachment);});
+                //logEntry.properties.map(property => {selectedProperties.push(property);});
+            }
+        } else {
             setSelectedLogbooks([]);
             setSelectedTags([]);
             setLevel(customization.defaultLevel);
             setSelectedProperties([]);
             titleRef.current.value = "";
         }
-        
-    }, [replyAction])
+    }, [draftAction]);
+
+    useEffect(() => {
+
+        // If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
+        // Copy relevant fields to the state of this class, taking into account that a Reply
+        // may or may not exist in the template.
+        if(replyAction && currentLogEntry){
+            fillMetadata(currentLogEntry);
+        } else if (draftAction) {
+            ologService.get(`/logs?properties=Draft&owner=${userData.userName}`)
+            .then(res => {
+                fillMetadata(res.data[0]);
+            })
+            .catch(e => {
+                fillMetadata(null);
+            });
+        } else {
+            fillMetadata(null);
+        }
+    }, [replyAction, draftAction, currentLogEntry, fillMetadata, userData.userName]);
+
+    // The below will ensure that when user has selected Reply and then New Log Entry,
+    // the entry being edited does not contain any copied data.
 
     const logbookSelectionChanged = (selection) => {
         if(selection) {
@@ -188,18 +209,32 @@ const EntryEditor = ({
                     setValidated(true);
                     if (checkValidity && selectionsAreValid){
                         setCreateInProgress(true);
-                        const logEntry = {
+                        let logEntry = {
                             logbooks: selectedLogbooks,
                             tags: selectedTags,
                             properties: selectedProperties,
                             title: titleRef.current.value,
                             level: level,
-                            description: descriptionRef.current.value
+                            //description: descriptionRef.current.value,
+                            source: descriptionRef.current.value
                         }
-                        let url = replyAction ? 
-                            `/logs?markup=commonmark&inReplyTo=${currentLogEntry.id}` :
-                            `/logs?markup=commonmark`;
-                        ologService.put(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader() })
+                        if (draftAction) {
+                            if ((event.submitter && event.submitter.name === "submit") || (event.nativeEvent && event.nativeEvent.submitter && event.nativeEvent.submitter.name === "submit"))
+                                logEntry.properties = [...selectedProperties].filter(property => property.name !== "Draft");
+                            else if (!selectedLogId) {
+                                logEntry.properties = [...selectedProperties, {"name": "Draft", "attributes": []}];
+                            }
+                        }
+                        let url = `/logs?markup=commonmark`;
+                        let request = ologService.put;
+                        if (replyAction)
+                            url = `/logs?markup=commonmark&inReplyTo=${currentLogEntry.id}`;
+                        else if (draftAction && selectedLogId) {
+                            logEntry.id = selectedLogId;
+                            url = `/logs/${selectedLogId}?markup=commonmark`;
+                            request = ologService.post;
+                        }
+                        request(url, logEntry, { withCredentials: true, headers: ologClientInfoHeader() })
                             .then(res => {
                                 if(attachedFiles.length > 0){ // No need to call backend if there are no attachments.
                                     submitAttachmentsMulti(res.data.id);
@@ -292,13 +327,19 @@ const EntryEditor = ({
         }
     }
 
+    const attachmentsStatic = attachedFilesStatic.map((attachment) => {
+        return(
+            <Attachment id={attachment.id} filename={attachment.filename} type={attachment.fileMetadataDescription} />
+        )
+    })
+
     const attachments = attachedFiles.map((file, index) => {
         return(
             <Attachment key={index} file={file} removeAttachment={removeAttachment}/>
         )
     })
     
-    const propertyItems = selectedProperties.filter(property => property.name !== "Log Entry Group").map((property, index) => {
+    const propertyItems = selectedProperties.filter(property => property.name !== "Log Entry Group" && property.name !== "Draft").map((property, index) => {
         return (
             <PropertyEditor key={index}
                 property={property}
@@ -323,7 +364,8 @@ const EntryEditor = ({
                 <Form noValidate validated={validated} onSubmit={submit}>
                     <Form.Row>
                         <Form.Label className="new-entry">New Log Entry</Form.Label>
-                        <Button type="submit" disabled={userData.userName === "" || createInProgress}>Submit</Button>
+                        <Button type="submit" name="submit" disabled={userData.userName === "" || createInProgress}>Submit</Button>
+                        {draftAction && <Button type="submit" style={{marginLeft: "5px"}} name="draft" disabled={userData.userName === "" || createInProgress}>Save as Draft</Button>}
                     </Form.Row>
                     <Form.Row>
                         <Form.Label>Logbooks:</Form.Label>
@@ -402,7 +444,7 @@ const EntryEditor = ({
                             </Button>
                     </Form.Row>
                     </Form>
-                    {attachedFiles.length > 0 ? <Form.Row className="grid-item">{attachments}</Form.Row> : null}
+                    {(attachedFiles.length + attachedFilesStatic.length) > 0 ? <Form.Row className="grid-item">{attachments} {attachmentsStatic}</Form.Row> : null}
                     <Form.Label className="mt-3">Properties:</Form.Label>
                     {<Form.Row className="grid-item">
                         <Form.Group style={{width: "400px"}}>

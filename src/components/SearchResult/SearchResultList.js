@@ -83,11 +83,15 @@ const SearchResultList = ({
     }
     
     const renderedSearchResults = searchResults.logs.length === 0 ? "No search results" : searchResults.logs.map((item, index) => {
-        return <SearchResultItem
-                    key={index}
-                    log={item}
-                    currentLogEntry={currentLogEntry}
-                />
+        if (item.properties.length && item.properties.filter(property => property.name === "Draft").length > 0) {
+            return <></>
+        } else {
+            return <SearchResultItem
+                       key={index}
+                       log={item}
+                       currentLogEntry={currentLogEntry}
+                   />
+        }
     });
 
     return(

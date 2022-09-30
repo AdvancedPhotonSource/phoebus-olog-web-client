@@ -38,6 +38,7 @@ const App = () => {
     const {data: tags = [], error: tagsError} = useGetTagsQuery();
     const {data: logbooks = [], error: logbooksError} = useGetLogbooksQuery();
     const [replyAction, setReplyAction] = useState(false);
+    const [draftAction, setDraftAction] = useState(false);
     const [showLogin, setShowLogin] = useState(false);
     const [showLogout, setShowLogout] = useState(false);
     const currentLogEntry = useSelector(state => state.currentLogEntry);
@@ -59,7 +60,7 @@ const App = () => {
                                 showLogin, setShowLogin,
                                 showLogout, setShowLogout,
                                 userData, setUserData,
-                                setReplyAction
+                                setReplyAction, setDraftAction
                             }}/>
                         </Col>
                         <Col>      
@@ -86,7 +87,7 @@ const App = () => {
                                     <EntryEditor {...{
                                         tags,
                                         logbooks,
-                                        replyAction,
+                                        replyAction, draftAction,
                                         userData, setUserData
                                     }}/>
                                 } />
